@@ -394,6 +394,34 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
 
   // --- DATA DISPLAY & FEEDBACK ---
   {
+    type: 'data-table',
+    name: 'Material Data Table',
+    category: 'data-display',
+    icon: 'Table',
+    description: 'Dynamic data table with search, headers, rows, and pagination bound to API/Mock state',
+    defaultProps: {
+      title: 'Users Directory',
+      searchable: true,
+      paginated: true,
+      pageSize: 5,
+      columns: [
+        { key: 'name', label: 'Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'role', label: 'Role' },
+        { key: 'status', label: 'Status' },
+      ],
+    },
+    defaultStyles: {
+      width: '100%',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+    },
+    defaultEvents: [],
+  },
+  {
     type: 'badge',
     name: 'Badge / Chip',
     category: 'data-display',

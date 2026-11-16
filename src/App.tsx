@@ -8,10 +8,11 @@ import { ScaffoldModal } from './components/modals/ScaffoldModal';
 import { AIAssistantModal } from './components/modals/AIAssistantModal';
 import { TemplatesModal } from './components/modals/TemplatesModal';
 import { CreateCustomComponentModal } from './components/modals/CreateCustomComponentModal';
+import { DataSourcesModal } from './components/modals/DataSourcesModal';
 import { useBuilder } from './context/BuilderContext';
 
 function BuilderStudio() {
-  const { isCreateComponentOpen, setIsCreateComponentOpen } = useBuilder();
+  const { isCreateComponentOpen, setIsCreateComponentOpen, isDataSourcesModalOpen, setIsDataSourcesModalOpen } = useBuilder();
   const [isScaffoldOpen, setIsScaffoldOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
@@ -44,6 +45,10 @@ function BuilderStudio() {
       <CreateCustomComponentModal
         isOpen={isCreateComponentOpen}
         onClose={() => setIsCreateComponentOpen(false)}
+      />
+      <DataSourcesModal
+        isOpen={isDataSourcesModalOpen}
+        onClose={() => setIsDataSourcesModalOpen(false)}
       />
     </div>
   );

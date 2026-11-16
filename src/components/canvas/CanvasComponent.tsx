@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { FlexComponent } from '../../types';
 import { useBuilder } from '../../context/BuilderContext';
-import { Settings2, Trash2, Copy, Code2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Settings2, Trash2, Copy, Code2, ChevronUp, ChevronDown, GripVertical, Database, Table, Search, Sparkles } from 'lucide-react';
+import { interpolateTokens } from '../../constants/dataSources';
 
 interface CanvasComponentProps {
   component: FlexComponent;
   parentId?: string | null;
+  dataItem?: Record<string, any>;
 }
 
-export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, parentId }) => {
+export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, parentId, dataItem }) => {
   const {
     selectedComponentId,
     hoveredComponentId,
@@ -26,12 +28,24 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
     insertComponentAt,
     screens,
     setActiveScreenId,
+    dataSources,
   } = useBuilder();
 
   // Local interactive state for preview mode
   const [inputValue, setInputValue] = useState(component.props.value || '');
   const [isChecked, setIsChecked] = useState(Boolean(component.props.checked));
   const [sliderValue, setSliderValue] = useState(component.props.value || 50);
+  const [tableSearch, setTableSearch] = useState('');
+  const [tablePage, setTablePage] = useState(1);
+
+  // Active data record: if passed from a repeat parent, use it; otherwise, use first item from bound DataSource
+  const boundDs = dataSources.find((d) => d.id === component.dataBinding?.dataSourceId) || dataSources[0];
+  const activeRecord = dataItem || (boundDs?.data?.[0] ? boundDs.data[0] : {});
+
+  const resolveText = (text: string | undefined): string => {
+    if (!text || typeof text !== 'string') return text || '';
+    return interpolateTokens(text, activeRecord);
+  };
 
   // Drop position indicator state: 'before' | 'after' | 'inside' | null
   const [dropPosition, setDropPosition] = useState<'before' | 'after' | 'inside' | null>(null);
@@ -229,6 +243,143 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
   // Render Inner Content by Component Type
   const renderInner = () => {
     switch (component.type) {
+      case 'data-table': {
+        const ds = dataSources.find((d) => d.id === (component.dataBinding?.dataSourceId || 'ds-users')) || dataSources[0];
+        const rawData = Array.isArray(ds?.data) ? ds.data : [];
+        const columns =
+          component.props.columns && component.props.columns.length > 0
+            ? component.props.columns
+            : (ds?.schema || []).slice(0, 4).map((f) => ({ key: f.name, label: f.name.toUpperCase() }));
+
+        const filteredData = rawData.filter((row: any) => {
+          if (!tableSearch) return true;
+          return Object.values(row).some((v) =>
+            String(v).toLowerCase().includes(tableSearch.toLowerCase())
+          );
+        });
+
+        const pageSize = component.props.pageSize || 5;
+        const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+        const pageData = filteredData.slice((tablePage - 1) * pageSize, tablePage * pageSize);
+
+        return (
+          <div className="w-full flex flex-col overflow-hidden text-xs">
+            {/* Table Header Bar */}
+            <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-700/80 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Table size={15} className="text-emerald-400" />
+                <span className="font-bold text-white text-sm">
+                  {component.props.title || ds?.name || 'Data Table'}
+                </span>
+                <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-medium">
+                  {filteredData.length} records
+                </span>
+              </div>
+
+              {component.props.searchable !== false && (
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search records..."
+                    value={tableSearch}
+                    disabled={!isPreviewMode}
+                    onChange={(e) => {
+                      setTableSearch(e.target.value);
+                      setTablePage(1);
+                    }}
+                    className={`px-2.5 py-1 pl-7 bg-slate-950 border border-slate-700 rounded-md text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500 ${pointerEventsClass}`}
+                  />
+                  <Search size={12} className="absolute left-2 top-2 text-slate-500 pointer-events-none" />
+                </div>
+              )}
+            </div>
+
+            {/* Table Element */}
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    {columns.map((col: any) => (
+                      <th key={col.key} className="py-2.5 px-4 font-medium">
+                        {col.label || col.key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {pageData.length > 0 ? (
+                    pageData.map((row: any, idx: number) => (
+                      <tr key={row.id || idx} className="hover:bg-slate-800/40 transition-colors">
+                        {columns.map((col: any) => {
+                          const val = row[col.key];
+                          const isStatus = col.key.toLowerCase().includes('status');
+                          return (
+                            <td key={col.key} className="py-2.5 px-4 text-slate-300">
+                              {isStatus ? (
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono ${
+                                    String(val).toLowerCase() === 'active' || String(val).toLowerCase() === 'completed'
+                                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                      : String(val).toLowerCase() === 'online'
+                                      ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                  }`}
+                                >
+                                  {String(val || '')}
+                                </span>
+                              ) : col.key.toLowerCase().includes('avatar') || col.key.toLowerCase().includes('image') ? (
+                                <img
+                                  src={String(val)}
+                                  alt=""
+                                  className="w-7 h-7 rounded-full object-cover border border-slate-700"
+                                />
+                              ) : (
+                                <span>{String(val !== undefined ? val : '')}</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={columns.length} className="py-6 text-center text-slate-500">
+                        No matching records found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Footer */}
+            {component.props.paginated !== false && totalPages > 1 && (
+              <div className="px-4 py-2 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                <span>
+                  Page {tablePage} of {totalPages}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    disabled={tablePage <= 1 || !isPreviewMode}
+                    onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                    className={`px-2 py-0.5 rounded bg-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-700 ${pointerEventsClass}`}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    disabled={tablePage >= totalPages || !isPreviewMode}
+                    onClick={() => setTablePage((p) => Math.min(totalPages, p + 1))}
+                    className={`px-2 py-0.5 rounded bg-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-700 ${pointerEventsClass}`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
       case 'button':
       case 'button-outlined':
       case 'button-fab':
@@ -237,7 +388,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
             type="button"
             className="flex items-center justify-center font-medium select-none active:opacity-90 w-full h-full bg-transparent border-0 text-inherit pointer-events-none"
           >
-            {component.props.label || 'Button'}
+            {resolveText(component.props.label || 'Button')}
           </button>
         );
 
@@ -385,16 +536,34 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
           <div className="flex flex-col w-full h-full">
             {component.props.title && (
               <div className="border-b border-slate-700/60 pb-3 mb-2">
-                <h3 className="text-base font-semibold text-white">{component.props.title}</h3>
+                <h3 className="text-base font-semibold text-white">{resolveText(component.props.title)}</h3>
                 {component.props.subtitle && (
-                  <p className="text-xs text-slate-400 mt-0.5">{component.props.subtitle}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{resolveText(component.props.subtitle)}</p>
                 )}
               </div>
             )}
             <div className="flex flex-col gap-3 w-full flex-1 min-h-[50px]">
-              {component.children && component.children.length > 0 ? (
+              {component.dataBinding?.enabled && component.dataBinding?.mode === 'repeat' && isPreviewMode ? (
+                (boundDs?.data || []).map((record: any, rIdx: number) => (
+                  <div key={record.id || rIdx} className="w-full flex flex-col gap-2">
+                    {component.children?.map((child) => (
+                      <CanvasComponent
+                        key={`${child.id}-repeat-${rIdx}`}
+                        component={child}
+                        parentId={component.id}
+                        dataItem={record}
+                      />
+                    ))}
+                  </div>
+                ))
+              ) : component.children && component.children.length > 0 ? (
                 component.children.map((child) => (
-                  <CanvasComponent key={child.id} component={child} parentId={component.id} />
+                  <CanvasComponent
+                    key={child.id}
+                    component={child}
+                    parentId={component.id}
+                    dataItem={activeRecord}
+                  />
                 ))
               ) : (
                 <div className="py-6 border-2 border-dashed border-slate-700/70 rounded-lg text-center text-xs text-slate-400">
@@ -409,9 +578,27 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
       case 'grid':
         return (
           <div className="w-full h-full min-h-[40px]">
-            {component.children && component.children.length > 0 ? (
+            {component.dataBinding?.enabled && component.dataBinding?.mode === 'repeat' && isPreviewMode ? (
+              (boundDs?.data || []).map((record: any, rIdx: number) => (
+                <div key={record.id || rIdx} className="w-full flex flex-col gap-2">
+                  {component.children?.map((child) => (
+                    <CanvasComponent
+                      key={`${child.id}-repeat-${rIdx}`}
+                      component={child}
+                      parentId={component.id}
+                      dataItem={record}
+                    />
+                  ))}
+                </div>
+              ))
+            ) : component.children && component.children.length > 0 ? (
               component.children.map((child) => (
-                <CanvasComponent key={child.id} component={child} parentId={component.id} />
+                <CanvasComponent
+                  key={child.id}
+                  component={child}
+                  parentId={component.id}
+                  dataItem={activeRecord}
+                />
               ))
             ) : (
               <div className="py-4 border border-dashed border-slate-700/60 rounded flex items-center justify-center text-xs text-slate-500">
@@ -423,28 +610,28 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
 
       case 'heading': {
         const Tag = (component.props.level || 'h2') as keyof JSX.IntrinsicElements;
-        return <Tag className="text-inherit font-inherit m-0">{component.props.text || 'Heading'}</Tag>;
+        return <Tag className="text-inherit font-inherit m-0">{resolveText(component.props.text || 'Heading')}</Tag>;
       }
 
       case 'paragraph':
-        return <p className="text-inherit font-inherit m-0 leading-relaxed">{component.props.text || ''}</p>;
+        return <p className="text-inherit font-inherit m-0 leading-relaxed">{resolveText(component.props.text || '')}</p>;
 
       case 'badge':
-        return <span>{component.props.text || 'Badge'}</span>;
+        return <span>{resolveText(component.props.text || 'Badge')}</span>;
 
       case 'alert':
         return (
           <div className="flex flex-col gap-1 w-full">
-            <strong className="text-sm font-semibold">{component.props.title || 'Notice'}</strong>
-            <p className="text-xs opacity-90">{component.props.message || ''}</p>
+            <strong className="text-sm font-semibold">{resolveText(component.props.title || 'Notice')}</strong>
+            <p className="text-xs opacity-90">{resolveText(component.props.message || '')}</p>
           </div>
         );
 
       case 'avatar':
         return (
           <img
-            src={component.props.src || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
-            alt={component.props.name || 'Avatar'}
+            src={resolveText(component.props.src) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
+            alt={resolveText(component.props.name || 'Avatar')}
             className="w-full h-full object-cover rounded-full"
           />
         );
@@ -617,6 +804,18 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
               <Trash2 size={12} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Dynamic Data Binding Badge */}
+      {!isPreviewMode && component.dataBinding?.enabled && (
+        <div className="absolute top-1 left-1 flex items-center gap-1 bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 px-1.5 py-0.5 rounded text-[10px] font-mono z-20 pointer-events-none shadow-sm">
+          <Database size={10} className="text-emerald-400" />
+          <span>
+            {component.dataBinding.mode === 'repeat'
+              ? `Repeat: ${boundDs?.name || 'API'} (${boundDs?.data?.length || 0})`
+              : `Bound: ${boundDs?.name || 'API'}`}
+          </span>
         </div>
       )}
 

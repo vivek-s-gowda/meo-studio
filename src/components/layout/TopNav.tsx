@@ -17,6 +17,7 @@ import {
   Layers,
   Code2,
   Check,
+  Database,
 } from 'lucide-react';
 
 interface TopNavProps {
@@ -42,6 +43,8 @@ export const TopNav: React.FC<TopNavProps> = ({
     undo,
     redo,
     clearCanvas,
+    dataSources,
+    setIsDataSourcesModalOpen,
   } = useBuilder();
 
   return (
@@ -70,6 +73,19 @@ export const TopNav: React.FC<TopNavProps> = ({
         >
           <Layers size={13} className="text-blue-400" />
           <span>Templates</span>
+        </button>
+
+        {/* Mock APIs & Data Sources Button */}
+        <button
+          onClick={() => setIsDataSourcesModalOpen(true)}
+          className="ml-2 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs text-slate-300 hover:text-white transition-colors"
+          title="Connect REST endpoints or edit local JSON data models"
+        >
+          <Database size={13} className="text-emerald-400" />
+          <span>Data Sources</span>
+          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded-full font-mono font-semibold">
+            {dataSources.length}
+          </span>
         </button>
       </div>
 

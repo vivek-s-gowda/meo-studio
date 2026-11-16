@@ -20,6 +20,7 @@ import {
   Layers,
   Sparkles,
   Check,
+  Database,
 } from 'lucide-react';
 
 export const RightSidebar: React.FC = () => {
@@ -37,6 +38,8 @@ export const RightSidebar: React.FC = () => {
     selectedComponent,
     updateComponentStyles,
     updateComponentProps,
+    dataSources,
+    setQuickPopup,
   } = useBuilder();
 
   // Primary Right Sidebar Mode: 'tree' | 'code' | 'inspector'
@@ -119,7 +122,7 @@ export const RightSidebar: React.FC = () => {
   const handleDownloadZip = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportProjectZip(screens, targetLanguage, 'flex-ui-project');
+      const blob = await exportProjectZip(screens, targetLanguage, 'flex-ui-project', dataSources);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -270,7 +273,8 @@ export const RightSidebar: React.FC = () => {
                     selectedScreenView === 'active'
                       ? components
                       : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                    `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Screen`
+                    `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Screen`,
+                    dataSources
                   )}
                   language="typescript"
                   title={`React (${activeScreen.name}Screen.tsx)`}
@@ -284,7 +288,9 @@ export const RightSidebar: React.FC = () => {
                 code={generateVueCode(
                   selectedScreenView === 'active'
                     ? components
-                    : screens.find((s) => s.id === selectedScreenView)?.components || components
+                    : screens.find((s) => s.id === selectedScreenView)?.components || components,
+                  'FlexApp',
+                  dataSources
                 )}
                 language="vue"
                 title={`Vue 3 (${activeScreen.name}.vue)`}
@@ -297,7 +303,9 @@ export const RightSidebar: React.FC = () => {
                 code={generateAngularCode(
                   selectedScreenView === 'active'
                     ? components
-                    : screens.find((s) => s.id === selectedScreenView)?.components || components
+                    : screens.find((s) => s.id === selectedScreenView)?.components || components,
+                  `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Component`,
+                  dataSources
                 )}
                 language="typescript"
                 title={`Angular (${activeScreen.name}.component.ts)`}
@@ -312,7 +320,8 @@ export const RightSidebar: React.FC = () => {
                     code={generateHTML(
                       selectedScreenView === 'active'
                         ? components
-                        : screens.find((s) => s.id === selectedScreenView)?.components || components
+                        : screens.find((s) => s.id === selectedScreenView)?.components || components,
+                      dataSources
                     )}
                     language="html"
                     title={`${activeScreen.name}.html`}
@@ -336,7 +345,8 @@ export const RightSidebar: React.FC = () => {
                     code={generateJS(
                       selectedScreenView === 'active'
                         ? components
-                        : screens.find((s) => s.id === selectedScreenView)?.components || components
+                        : screens.find((s) => s.id === selectedScreenView)?.components || components,
+                      dataSources
                     )}
                     language="javascript"
                     title="script.js"
@@ -463,6 +473,53 @@ export const RightSidebar: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Dynamic Data Binding Section */}
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-semibold text-slate-300">
+                    <Database size={13} className="text-emerald-400" />
+                    <span>Dynamic Data Binding</span>
+                  </div>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                      selectedComponent.dataBinding?.enabled
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {selectedComponent.dataBinding?.enabled ? 'Active' : 'Disabled'}
+                  </span>
+                </div>
+                {selectedComponent.dataBinding?.enabled && (
+                  <div className="text-[11px] text-slate-400 space-y-1">
+                    <div>
+                      Source:{' '}
+                      <span className="text-emerald-300 font-medium">
+                        {dataSources.find((d) => d.id === selectedComponent.dataBinding?.dataSourceId)?.name || 'Default'}
+                      </span>
+                    </div>
+                    <div>
+                      Mode: <span className="text-slate-300 capitalize">{selectedComponent.dataBinding.mode}</span>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() =>
+                    setQuickPopup({
+                      isOpen: true,
+                      x: 380,
+                      y: 150,
+                      componentId: selectedComponent.id,
+                      activeTab: 'data',
+                    })
+                  }
+                  className="w-full py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded text-slate-300 hover:text-white text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Database size={12} className="text-emerald-400" />
+                  <span>Configure Data Binding...</span>
+                </button>
               </div>
 
               {/* Bound Events */}

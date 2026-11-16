@@ -52,6 +52,12 @@ import {
   Heart,
   Zap,
   Box,
+  Database,
+  Table,
+  CloudLightning,
+  RefreshCw,
+  ExternalLink,
+  Search,
 } from 'lucide-react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -114,6 +120,12 @@ export const DynamicIcon: React.FC<IconProps> = ({ name, size = 18, className = 
     Heart,
     Zap,
     Box,
+    Database,
+    Table,
+    CloudLightning,
+    RefreshCw,
+    ExternalLink,
+    Search,
   };
 
   const IconComponent = iconMap[name] || Layout;
@@ -173,4 +185,10 @@ export {
   Heart,
   Zap,
   Box,
+  Database,
+  Table,
+  CloudLightning,
+  RefreshCw,
+  ExternalLink,
+  Search,
 };

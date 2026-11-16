@@ -51,6 +51,35 @@ export interface ComponentEvent {
   description?: string;
 }
 
+export interface DataSourceField {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  sampleValue?: any;
+}
+
+export interface DataSource {
+  id: string;
+  name: string;
+  type: 'mock' | 'rest';
+  endpoint?: string;
+  method?: 'GET' | 'POST';
+  headers?: Record<string, string>;
+  data: any[];
+  schema?: DataSourceField[];
+  isLoading?: boolean;
+  error?: string | null;
+  lastFetched?: number;
+}
+
+export interface ComponentDataBinding {
+  enabled: boolean;
+  dataSourceId: string;
+  dataPath?: string;
+  mode: 'repeat' | 'single-record';
+  recordIndex?: number;
+  fieldMappings?: Record<string, string>;
+}
+
 export interface FlexComponent {
   id: string;
   type: string;
@@ -61,6 +90,7 @@ export interface FlexComponent {
   props: Record<string, any>;
   styles: ComponentStyle;
   events: ComponentEvent[];
+  dataBinding?: ComponentDataBinding;
   children?: FlexComponent[];
   parentId?: string | null;
 }
@@ -107,5 +137,5 @@ export interface QuickPopupState {
   x: number;
   y: number;
   componentId: string | null;
-  activeTab?: 'styles' | 'props' | 'events';
+  activeTab?: 'styles' | 'props' | 'events' | 'data';
 }

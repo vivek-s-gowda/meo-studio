@@ -9,9 +9,12 @@ import {
   ComponentStyle,
   ComponentEvent,
   Screen,
+  DataSource,
+  ComponentDataBinding,
 } from '../types';
 import { COMPONENT_CATALOG } from '../constants/componentCatalog';
 import { PRESET_TEMPLATES } from '../constants/templates';
+import { PRESET_DATA_SOURCES, inferSchema } from '../constants/dataSources';
 
 interface BuilderContextType {
   screens: Screen[];
@@ -30,6 +33,19 @@ interface BuilderContextType {
   draggedComponentId: string | null;
   customComponents: ComponentDefinition[];
   isCreateComponentOpen: boolean;
+
+  // Data Sources & Mock APIs
+  dataSources: DataSource[];
+  activeDataSourceId: string | null;
+  isDataSourcesModalOpen: boolean;
+  setIsDataSourcesModalOpen: (open: boolean) => void;
+  setActiveDataSourceId: (id: string | null) => void;
+  addDataSource: (source: Omit<DataSource, 'id'>) => string;
+  updateDataSource: (id: string, updates: Partial<DataSource>) => void;
+  deleteDataSource: (id: string) => void;
+  fetchDataSourceData: (id: string) => Promise<void>;
+  updateComponentDataBinding: (id: string, binding: ComponentDataBinding | undefined) => void;
+  getDataSourceById: (id: string) => DataSource | undefined;
 
   // Actions
   addScreen: (name: string, route: string, starterTemplateId?: string) => string;
@@ -314,6 +330,115 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [isCreateComponentOpen, setIsCreateComponentOpen] = useState<boolean>(false);
+  const [isDataSourcesModalOpen, setIsDataSourcesModalOpen] = useState<boolean>(false);
+
+  // Data Sources State
+  const [dataSources, setDataSources] = useState<DataSource[]>(() => {
+    try {
+      const saved = localStorage.getItem('flexui_datasources');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading data sources from localStorage:', e);
+    }
+    return PRESET_DATA_SOURCES;
+  });
+
+  const [activeDataSourceId, setActiveDataSourceId] = useState<string | null>('ds-users');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('flexui_datasources', JSON.stringify(dataSources));
+    } catch (e) {
+      console.error('Failed to sync data sources to localStorage:', e);
+    }
+  }, [dataSources]);
+
+  const addDataSource = useCallback((source: Omit<DataSource, 'id'>): string => {
+    const id = `ds-${source.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString(36)}`;
+    const newDs: DataSource = {
+      ...source,
+      id,
+      schema: source.schema || inferSchema(source.data || []),
+    };
+    setDataSources((prev) => [...prev, newDs]);
+    return id;
+  }, []);
+
+  const updateDataSource = useCallback((id: string, updates: Partial<DataSource>) => {
+    setDataSources((prev) =>
+      prev.map((ds) => {
+        if (ds.id === id) {
+          const nextData = updates.data !== undefined ? updates.data : ds.data;
+          const nextSchema = updates.schema || (updates.data !== undefined ? inferSchema(nextData) : ds.schema);
+          return {
+            ...ds,
+            ...updates,
+            schema: nextSchema,
+          };
+        }
+        return ds;
+      })
+    );
+  }, []);
+
+  const deleteDataSource = useCallback((id: string) => {
+    setDataSources((prev) => prev.filter((ds) => ds.id !== id));
+  }, []);
+
+  const fetchDataSourceData = useCallback(async (id: string) => {
+    setDataSources((prev) =>
+      prev.map((ds) => (ds.id === id ? { ...ds, isLoading: true, error: null } : ds))
+    );
+    const target = dataSources.find((ds) => ds.id === id);
+    if (!target || !target.endpoint) {
+      setDataSources((prev) =>
+        prev.map((ds) => (ds.id === id ? { ...ds, isLoading: false } : ds))
+      );
+      return;
+    }
+
+    try {
+      const res = await fetch(target.endpoint, {
+        method: target.method || 'GET',
+        headers: target.headers || { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const json = await res.json();
+      const arrayData = Array.isArray(json) ? json : json.data || json.items || [json];
+      const newSchema = inferSchema(arrayData);
+
+      setDataSources((prev) =>
+        prev.map((ds) =>
+          ds.id === id
+            ? {
+                ...ds,
+                data: arrayData,
+                schema: newSchema,
+                isLoading: false,
+                lastFetched: Date.now(),
+              }
+            : ds
+        )
+      );
+    } catch (err: any) {
+      console.error('Fetch error:', err);
+      setDataSources((prev) =>
+        prev.map((ds) =>
+          ds.id === id
+            ? {
+                ...ds,
+                isLoading: false,
+                error: err.message || 'Failed to fetch endpoint',
+              }
+            : ds
+        )
+      );
+    }
+  }, [dataSources]);
+
+  const getDataSourceById = useCallback((id: string) => {
+    return dataSources.find((ds) => ds.id === id);
+  }, [dataSources]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(null);
   const [draggedComponentId, setDraggedComponentId] = useState<string | null>(null);
@@ -775,6 +900,29 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     [components, recordHistory]
   );
 
+  // Update Data Binding
+  const updateComponentDataBinding = useCallback(
+    (id: string, binding: ComponentDataBinding | undefined) => {
+      recordHistory(components);
+      const updateRecursive = (list: FlexComponent[]): FlexComponent[] => {
+        return list.map((item) => {
+          if (item.id === id) {
+            return {
+              ...item,
+              dataBinding: binding,
+            };
+          }
+          if (item.children) {
+            return { ...item, children: updateRecursive(item.children) };
+          }
+          return item;
+        });
+      };
+      setComponents((prev) => updateRecursive(prev));
+    },
+    [components, recordHistory]
+  );
+
   // Remove Component
   const removeComponent = useCallback(
     (id: string) => {
@@ -971,6 +1119,17 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateComponentStyles,
     updateComponentProps,
     updateComponentEvents,
+    updateComponentDataBinding,
+    dataSources,
+    activeDataSourceId,
+    setActiveDataSourceId,
+    isDataSourcesModalOpen,
+    setIsDataSourcesModalOpen,
+    addDataSource,
+    updateDataSource,
+    deleteDataSource,
+    fetchDataSourceData,
+    getDataSourceById,
     removeComponent,
     duplicateComponent,
     moveComponent,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilder } from '../../context/BuilderContext';
-import { X, Palette, Sliders, Code2, Play, Check, Plus, Trash2, Compass, ArrowRight } from 'lucide-react';
+import { X, Palette, Sliders, Code2, Play, Check, Plus, Trash2, Compass, ArrowRight, Database, Sparkles, RefreshCw } from 'lucide-react';
 import { ComponentEvent } from '../../types';
+import { interpolateTokens } from '../../constants/dataSources';
 
 export const QuickStylePopup: React.FC = () => {
   const {
@@ -11,10 +12,13 @@ export const QuickStylePopup: React.FC = () => {
     updateComponentStyles,
     updateComponentProps,
     updateComponentEvents,
+    updateComponentDataBinding,
+    dataSources,
+    setIsDataSourcesModalOpen,
     screens,
   } = useBuilder();
 
-  const [activeTab, setActiveTab] = useState<'styles' | 'props' | 'events'>('styles');
+  const [activeTab, setActiveTab] = useState<'styles' | 'props' | 'events' | 'data'>('styles');
 
   useEffect(() => {
     if (quickPopup.activeTab) {
@@ -98,12 +102,23 @@ export const QuickStylePopup: React.FC = () => {
           onClick={() => setActiveTab('events')}
           className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'events'
-              ? 'border-blue-500 text-emerald-400 bg-slate-800/40'
+              ? 'border-blue-500 text-purple-400 bg-slate-800/40'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           <Code2 size={14} />
-          <span>JS Binding</span>
+          <span>JS Events</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('data')}
+          className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+            activeTab === 'data'
+              ? 'border-emerald-500 text-emerald-400 bg-slate-800/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Database size={14} />
+          <span>Data</span>
         </button>
       </div>
 
@@ -545,6 +560,185 @@ export const QuickStylePopup: React.FC = () => {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {/* --- TAB 4: DYNAMIC DATA BINDING --- */}
+        {activeTab === 'data' && (
+          <div className="space-y-4">
+            {/* Enable Binding Toggle */}
+            <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-2">
+                <Database size={15} className="text-emerald-400" />
+                <div>
+                  <div className="font-semibold text-white text-xs">Dynamic Data Binding</div>
+                  <div className="text-[10px] text-slate-400">Bind component to REST APIs or mock JSON</div>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean(component.dataBinding?.enabled)}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  updateComponentDataBinding(component.id, {
+                    enabled,
+                    dataSourceId: component.dataBinding?.dataSourceId || dataSources[0]?.id || 'ds-users',
+                    mode: component.isContainer || component.type === 'data-table' ? 'repeat' : 'single-record',
+                  });
+                }}
+                className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+              />
+            </div>
+
+            {component.dataBinding?.enabled ? (
+              <div className="space-y-3">
+                {/* Select Data Source */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      Target Data Source
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsDataSourcesModalOpen(true)}
+                      className="text-[10px] text-emerald-400 hover:text-emerald-300 font-mono"
+                    >
+                      Manage APIs ↗
+                    </button>
+                  </div>
+                  <select
+                    value={component.dataBinding.dataSourceId}
+                    onChange={(e) => {
+                      updateComponentDataBinding(component.id, {
+                        ...component.dataBinding!,
+                        dataSourceId: e.target.value,
+                      });
+                    }}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 outline-none focus:border-emerald-500 text-xs cursor-pointer font-medium"
+                  >
+                    {dataSources.map((ds) => (
+                      <option key={ds.id} value={ds.id} className="bg-slate-900 text-white">
+                        {ds.name} ({ds.type.toUpperCase()} • {ds.data?.length || 0} items)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Binding Mode (if Container or Card or Table) */}
+                {(component.isContainer || component.type === 'data-table') && (
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                      Render Mode
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateComponentDataBinding(component.id, {
+                            ...component.dataBinding!,
+                            mode: 'repeat',
+                          })
+                        }
+                        className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-colors ${
+                          component.dataBinding.mode === 'repeat'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Repeat List (v-for / map)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateComponentDataBinding(component.id, {
+                            ...component.dataBinding!,
+                            mode: 'single-record',
+                          })
+                        }
+                        className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-colors ${
+                          component.dataBinding.mode === 'single-record'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Single Record
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Field Injection Tokens */}
+                {(() => {
+                  const activeDs =
+                    dataSources.find((d) => d.id === component.dataBinding?.dataSourceId) || dataSources[0];
+                  if (!activeDs) return null;
+                  const firstRecord = activeDs.data?.[0] || {};
+
+                  return (
+                    <div className="space-y-3 pt-1 border-t border-slate-800">
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            Insert Data Token
+                          </label>
+                          <span className="text-[10px] text-slate-500">Click to insert into prop</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(activeDs.schema || []).map((field) => (
+                            <button
+                              key={field.name}
+                              type="button"
+                              onClick={() => {
+                                const token = `{{item.${field.name}}}`;
+                                if (component.type === 'heading' || component.type === 'paragraph' || component.type === 'badge') {
+                                  updateComponentProps(component.id, { text: token });
+                                } else if (component.type === 'button' || component.type === 'button-outlined') {
+                                  updateComponentProps(component.id, { label: token });
+                                } else if (component.type === 'avatar') {
+                                  updateComponentProps(component.id, { src: token });
+                                } else if (component.type === 'input') {
+                                  updateComponentProps(component.id, { placeholder: token });
+                                } else if (component.type === 'card') {
+                                  updateComponentProps(component.id, { title: token });
+                                }
+                              }}
+                              className="px-2 py-0.8 bg-slate-950 hover:bg-slate-800 border border-slate-700/80 rounded text-[11px] font-mono text-emerald-300 hover:border-emerald-500 transition-colors"
+                              title={`Sample: ${JSON.stringify(field.sampleValue)}`}
+                            >
+                              +{field.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Live Token Evaluation Preview */}
+                      <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+                          <Sparkles size={11} className="text-emerald-400" />
+                          <span>Live Evaluation Sample (Record #1)</span>
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-300 truncate">
+                          {component.props.text
+                            ? interpolateTokens(component.props.text, firstRecord)
+                            : component.props.label
+                            ? interpolateTokens(component.props.label, firstRecord)
+                            : component.props.title
+                            ? interpolateTokens(component.props.title, firstRecord)
+                            : '(No token applied in primary prop yet)'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-950/50 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 space-y-1">
+                <p className="text-xs">Dynamic data binding is disabled for this component.</p>
+                <p className="text-[10px] text-slate-600">
+                  Enable above to bind text, images, or list loops to REST APIs or mock datasets.
+                </p>
+              </div>
             )}
           </div>
         )}

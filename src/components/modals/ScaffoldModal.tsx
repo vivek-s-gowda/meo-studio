@@ -10,7 +10,7 @@ interface ScaffoldModalProps {
 }
 
 export const ScaffoldModal: React.FC<ScaffoldModalProps> = ({ isOpen, onClose }) => {
-  const { targetLanguage, setTargetLanguage, components, screens } = useBuilder();
+  const { targetLanguage, setTargetLanguage, components, screens, dataSources } = useBuilder();
   const [selectedLang, setSelectedLang] = useState<TargetLanguage>(targetLanguage);
   const [isExporting, setIsExporting] = useState(false);
   const [projectName, setProjectName] = useState('flex-ui-app');
@@ -20,7 +20,7 @@ export const ScaffoldModal: React.FC<ScaffoldModalProps> = ({ isOpen, onClose })
   const handleScaffoldDownload = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportProjectZip(screens, selectedLang, projectName);
+      const blob = await exportProjectZip(screens, selectedLang, projectName, dataSources);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

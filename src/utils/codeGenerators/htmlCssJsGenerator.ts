@@ -1,6 +1,6 @@
-import { FlexComponent } from '../../types';
+import { FlexComponent, DataSource } from '../../types';
 
-export function generateHTML(components: FlexComponent[]): string {
+export function generateHTML(components: FlexComponent[], dataSources: DataSource[] = []): string {
   function renderComponent(comp: FlexComponent, indent = 2): string {
     const spaces = ' '.repeat(indent);
     const classes = `flex-comp flex-comp-${comp.id}`;
@@ -10,6 +10,28 @@ export function generateHTML(components: FlexComponent[]): string {
     const hasChildren = comp.children && comp.children.length > 0;
 
     switch (comp.type) {
+      case 'data-table': {
+        const cols = (comp.props.columns || [{ key: 'name', label: 'Name' }, { key: 'status', label: 'Status' }])
+          .map((c: any) => `${spaces}        <th>${c.label || c.key}</th>`)
+          .join('\n');
+        return `${spaces}<!-- Material Data Table -->
+${spaces}<div ${idAttr} class="${classes} table-card">
+${spaces}  <div class="table-header">
+${spaces}    <h3>${comp.props.title || 'Data Directory'}</h3>
+${spaces}    <input type="text" placeholder="Search records..." oninput="filterTable('${comp.id}', this.value)" class="table-search" />
+${spaces}  </div>
+${spaces}  <table class="data-table">
+${spaces}    <thead>
+${spaces}      <tr>
+${cols}
+${spaces}      </tr>
+${spaces}    </thead>
+${spaces}    <tbody id="tbody-${comp.id}">
+${spaces}      <!-- Dynamic rows injected via loadDataSources() in script.js -->
+${spaces}    </tbody>
+${spaces}  </table>
+${spaces}</div>`;
+      }
       case 'button':
       case 'button-outlined':
       case 'button-fab': {
@@ -229,7 +251,7 @@ body {
   return cssRules.join('\n\n');
 }
 
-export function generateJS(components: FlexComponent[]): string {
+export function generateJS(components: FlexComponent[], dataSources: DataSource[] = []): string {
   const functions: Map<string, string> = new Map();
 
   function collectEvents(comp: FlexComponent) {
@@ -253,8 +275,24 @@ export function generateJS(components: FlexComponent[]): string {
 
   const defaultFunctions = [
     `// Auto-generated FlexUI Client Interaction Scripts`,
+    `const DATA_SOURCES = ${JSON.stringify(
+      dataSources.reduce((acc, d) => ({ ...acc, [d.id]: d.data || [] }), {}),
+      null,
+      2
+    )};`,
+    ``,
+    `function filterTable(tableId, query) {`,
+    `  const tbody = document.getElementById('tbody-' + tableId);`,
+    `  if (!tbody) return;`,
+    `  const rows = tbody.querySelectorAll('tr');`,
+    `  rows.forEach(r => {`,
+    `    const text = r.textContent.toLowerCase();`,
+    `    r.style.display = text.includes(query.toLowerCase()) ? '' : 'none';`,
+    `  });`,
+    `}`,
+    ``,
     `document.addEventListener('DOMContentLoaded', () => {`,
-    `  console.log('FlexUI interactive application initialized');`,
+    `  console.log('FlexUI interactive application initialized with dynamic state.');`,
     `});`,
   ];
 

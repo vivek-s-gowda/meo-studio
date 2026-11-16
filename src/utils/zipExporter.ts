@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { FlexComponent, TargetLanguage, Screen } from '../types';
+import { FlexComponent, TargetLanguage, Screen, DataSource } from '../types';
 import { generateReactCode, generateReactMultiRouter } from './codeGenerators/reactGenerator';
 import { generateVueCode } from './codeGenerators/vueGenerator';
 import { generateAngularCode } from './codeGenerators/angularGenerator';
@@ -17,7 +17,8 @@ function toPascalCase(str: string): string {
 export async function exportProjectZip(
   screensOrComponents: Screen[] | FlexComponent[],
   language: TargetLanguage,
-  projectName = 'flex-ui-project'
+  projectName = 'flex-ui-project',
+  dataSources: DataSource[] = []
 ): Promise<Blob> {
   const zip = new JSZip();
 
@@ -40,16 +41,20 @@ export async function exportProjectZip(
 
   const primaryComponents = screens[0].components;
 
+  if (dataSources && dataSources.length > 0) {
+    zip.file('src/data/mockData.json', JSON.stringify(dataSources, null, 2));
+  }
+
   if (language === 'react') {
     // React Multi-Screen Routing Scaffolding
     if (screens.length > 1) {
       screens.forEach((s) => {
         const compName = `${toPascalCase(s.name)}Screen`;
-        zip.file(`src/pages/${compName}.tsx`, generateReactCode(s.components, compName));
+        zip.file(`src/pages/${compName}.tsx`, generateReactCode(s.components, compName, dataSources));
       });
       zip.file('src/App.tsx', generateReactMultiRouter(screens));
     } else {
-      zip.file('src/App.tsx', generateReactCode(primaryComponents));
+      zip.file('src/App.tsx', generateReactCode(primaryComponents, 'App', dataSources));
     }
 
     zip.file(
@@ -147,10 +152,10 @@ export default defineConfig({
     if (screens.length > 1) {
       screens.forEach((s) => {
         const viewName = `${toPascalCase(s.name)}View`;
-        zip.file(`src/views/${viewName}.vue`, generateVueCode(s.components, viewName));
+        zip.file(`src/views/${viewName}.vue`, generateVueCode(s.components, viewName, dataSources));
       });
     }
-    const appVue = generateVueCode(primaryComponents);
+    const appVue = generateVueCode(primaryComponents, 'App', dataSources);
     zip.file('src/App.vue', appVue);
     zip.file(
       'src/main.ts',
@@ -214,11 +219,11 @@ export default defineConfig({
         const compName = `${toPascalCase(s.name)}Component`;
         zip.file(
           `src/app/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.component.ts`,
-          generateAngularCode(s.components, compName)
+          generateAngularCode(s.components, compName, dataSources)
         );
       });
     }
-    const appComp = generateAngularCode(primaryComponents);
+    const appComp = generateAngularCode(primaryComponents, 'FlexAppComponent', dataSources);
     zip.file('src/app/app.component.ts', appComp);
     zip.file(
       'src/main.ts',
@@ -262,13 +267,13 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
           idx === 0 || s.route === '/'
             ? 'index.html'
             : `${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.html`;
-        zip.file(fileName, generateHTML(s.components));
+        zip.file(fileName, generateHTML(s.components, dataSources));
       });
     } else {
-      zip.file('index.html', generateHTML(primaryComponents));
+      zip.file('index.html', generateHTML(primaryComponents, dataSources));
     }
     zip.file('style.css', generateCSS(primaryComponents));
-    zip.file('script.js', generateJS(primaryComponents));
+    zip.file('script.js', generateJS(primaryComponents, dataSources));
   }
 
   // Common README.md
