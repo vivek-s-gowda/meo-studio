@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="512" height="512" rx="128" fill="url(#glow)"/>
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#334155" stroke-width="8"/>
+  
+  <!-- Outer Window Frame -->
+  <rect width="360" height="360" x="76" y="76" rx="48" fill="#1e293b" stroke="url(#grad)" stroke-width="16"/>
+  
+  <!-- Top App Header Bar -->
+  <path d="M 76 156 L 436 156" stroke="#334155" stroke-width="12"/>
+  <circle cx="120" cy="116" r="12" fill="#ef4444"/>
+  <circle cx="156" cy="116" r="12" fill="#f59e0b"/>
+  <circle cx="192" cy="116" r="12" fill="#10b981"/>
+  
+  <!-- Sidebar & Canvas Layout Split -->
+  <path d="M 196 156 L 196 436" stroke="#334155" stroke-width="12"/>
+  
+  <!-- UI Components inside Canvas -->
+  <rect width="180" height="40" x="226" y="196" rx="10" fill="url(#grad)"/>
+  <rect width="180" height="24" x="226" y="256" rx="6" fill="#334155"/>
+  <rect width="80" height="36" x="226" y="300" rx="8" fill="#3b82f6"/>
+  <rect width="80" height="36" x="326" y="300" rx="8" fill="#6366f1"/>
+</svg>

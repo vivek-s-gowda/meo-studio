@@ -3,13 +3,53 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "server": "node server/server.js",
     "start": "node server/server.js",
-    "py-service": "python3 python_service/app.py"
+    "py-service": "python3 python_service/app.py",
+    "electron:dev": "node electron/dev.cjs",
+    "electron:build": "npm run build && electron-builder",
+    "docker:build": "docker build -t flexui .",
+    "docker:run": "docker run -d -p 3000:80 --name flexui-container flexui",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
+  },
+  "build": {
+    "appId": "com.flexui.studio",
+    "productName": "FlexUI Studio",
+    "copyright": "Copyright © 2026 FlexUI Team",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    }
   },
   "dependencies": {
     "cors": "^2.8.5",

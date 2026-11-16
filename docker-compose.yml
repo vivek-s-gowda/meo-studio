@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------
+  # 1. Frontend Web Studio (Nginx + Built Production React SPA)
+  # ----------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flexui-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=production
+    networks:
+      - flexui-net
+
+  # ----------------------------------------------------------------
+  # 2. Node.js Backend API Service (REST & Scaffolding API)
+  # ----------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: flexui-api
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - NODE_ENV=production
+    networks:
+      - flexui-net
+
+  # ----------------------------------------------------------------
+  # 3. Python Schematic Analysis Microservice (AST & Linting)
+  # ----------------------------------------------------------------
+  python-service:
+    build:
+      context: ./python_service
+      dockerfile_inline: |
+        FROM python:3.11-alpine
+        WORKDIR /app
+        COPY app.py ./
+        EXPOSE 5002
+        CMD ["python", "app.py"]
+    container_name: flexui-python-service
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    networks:
+      - flexui-net
+
+networks:
+  flexui-net:
+    driver: bridge
