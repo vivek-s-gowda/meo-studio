@@ -1,8 +1,60 @@
-import { FlexComponent } from '../../types';
+import { FlexComponent, Screen } from '../../types';
+
+function toPascalCase(str: string): string {
+  return str
+    .replace(/[^a-zA-Z0-9]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+}
+
+export function generateReactMultiRouter(screens: Screen[]): string {
+  const imports = screens
+    .map((s) => `import ${toPascalCase(s.name)}Screen from './pages/${toPascalCase(s.name)}Screen';`)
+    .join('\n');
+
+  const routes = screens
+    .map((s) => `          <Route path="${s.route}" element={<${toPascalCase(s.name)}Screen />} />`)
+    .join('\n');
+
+  const navLinks = screens
+    .map((s) => `            <Link to="${s.route}" className="hover:text-blue-400 transition-colors">${s.name}</Link>`)
+    .join('\n');
+
+  return `import React from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+${imports}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      {/* Top Application Navigation */}
+      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between text-xs font-medium">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+          <span className="font-bold text-white text-sm">FlexUI App</span>
+        </div>
+        <nav className="flex items-center gap-4 text-slate-300">
+${navLinks}
+        </nav>
+      </header>
+
+      <main className="p-6 max-w-5xl mx-auto">
+        <Routes>
+${routes}
+        </Routes>
+      </main>
+    </BrowserRouter>
+  );
+}
+`;
+}
 
 export function generateReactCode(components: FlexComponent[], componentName = 'FlexApp'): string {
   const stateHooks: Set<string> = new Set();
   const handlers: Map<string, string> = new Map();
+  let usesRouter = false;
 
   function toStyleObject(styles: FlexComponent['styles']): string {
     const validStyles: Record<string, string> = {};
@@ -63,6 +115,10 @@ export function generateReactCode(components: FlexComponent[], componentName = '
       case 'button':
       case 'button-outlined':
       case 'button-fab': {
+        if (comp.props.targetRoute) {
+          usesRouter = true;
+          return `${spaces}<button${styleAttr} onClick={() => navigate('${comp.props.targetRoute}')} className="transition-all active:scale-95">\n${spaces}  {${JSON.stringify(comp.props.label || 'Button')}}\n${spaces}</button>`;
+        }
         return `${spaces}<button${styleAttr}${eventString} className="transition-all active:scale-95">\n${spaces}  {${JSON.stringify(comp.props.label || 'Button')}}\n${spaces}</button>`;
       }
 
@@ -158,11 +214,13 @@ export function generateReactCode(components: FlexComponent[], componentName = '
   const renderedElements = components.map((c) => renderJSX(c, 6)).join('\n\n');
   const hooksBlock = stateHooks.size > 0 ? Array.from(stateHooks).join('\n') + '\n\n' : '';
   const handlersBlock = handlers.size > 0 ? Array.from(handlers.values()).join('\n\n') + '\n\n' : '';
+  const navHook = usesRouter ? '  const navigate = useNavigate();\n' : '';
+  const routerImport = usesRouter ? "import { useNavigate } from 'react-router-dom';\n" : '';
 
   return `import React, { useState } from 'react';
-
+${routerImport}
 export default function ${componentName}() {
-${hooksBlock}${handlersBlock}  return (
+${navHook}${hooksBlock}${handlersBlock}  return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 flex flex-col gap-4 max-w-5xl mx-auto">
 ${renderedElements}
     </div>

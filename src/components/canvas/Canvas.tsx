@@ -3,6 +3,7 @@ import { useBuilder } from '../../context/BuilderContext';
 import { CanvasComponent } from './CanvasComponent';
 import { ContextMenu } from './ContextMenu';
 import { QuickStylePopup } from './QuickStylePopup';
+import { ScreenNavBar } from './ScreenNavBar';
 import { PlusCircle, Sparkles, Layout } from 'lucide-react';
 import { ComponentDefinition } from '../../types';
 
@@ -85,6 +86,9 @@ export const Canvas: React.FC = () => {
       onDrop={handleDrop}
       className="flex-1 h-full bg-[#090d16] canvas-dots overflow-auto relative p-6 flex flex-col items-center justify-start transition-all"
     >
+      {/* Screen Navigation & Route Manager Bar */}
+      <ScreenNavBar />
+
       {/* Device Frame Viewport */}
       <div
         id="canvas-viewport"

@@ -10,7 +10,7 @@ interface ScaffoldModalProps {
 }
 
 export const ScaffoldModal: React.FC<ScaffoldModalProps> = ({ isOpen, onClose }) => {
-  const { targetLanguage, setTargetLanguage, components } = useBuilder();
+  const { targetLanguage, setTargetLanguage, components, screens } = useBuilder();
   const [selectedLang, setSelectedLang] = useState<TargetLanguage>(targetLanguage);
   const [isExporting, setIsExporting] = useState(false);
   const [projectName, setProjectName] = useState('flex-ui-app');
@@ -20,7 +20,7 @@ export const ScaffoldModal: React.FC<ScaffoldModalProps> = ({ isOpen, onClose })
   const handleScaffoldDownload = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportProjectZip(components, selectedLang, projectName);
+      const blob = await exportProjectZip(screens, selectedLang, projectName);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -187,7 +187,7 @@ export const ScaffoldModal: React.FC<ScaffoldModalProps> = ({ isOpen, onClose })
         {/* Footer */}
         <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
           <p className="text-xs text-slate-400">
-            {components.length} UI components compiled into {selectedLang.toUpperCase()}
+            {screens.length} Screens ({screens.reduce((acc, s) => acc + s.components.length, 0)} components) compiled into {selectedLang.toUpperCase()}
           </p>
           <div className="flex gap-2">
             <button

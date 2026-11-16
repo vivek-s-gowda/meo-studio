@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useBuilder } from '../../context/BuilderContext';
 import { SyntaxHighlighter } from '../ui/SyntaxHighlighter';
 import { generateHTML, generateCSS, generateJS } from '../../utils/codeGenerators/htmlCssJsGenerator';
-import { generateReactCode } from '../../utils/codeGenerators/reactGenerator';
+import { generateReactCode, generateReactMultiRouter } from '../../utils/codeGenerators/reactGenerator';
 import { generateVueCode } from '../../utils/codeGenerators/vueGenerator';
 import { generateAngularCode } from '../../utils/codeGenerators/angularGenerator';
 import { exportProjectZip } from '../../utils/zipExporter';
@@ -24,6 +24,8 @@ import {
 
 export const RightSidebar: React.FC = () => {
   const {
+    screens,
+    activeScreen,
     components,
     selectedComponentId,
     setSelectedComponentId,
@@ -42,6 +44,7 @@ export const RightSidebar: React.FC = () => {
 
   // Subtabs for Code View (HTML, CSS, JS or Unified Framework)
   const [codeSubTab, setCodeSubTab] = useState<'html' | 'css' | 'js' | 'all'>('html');
+  const [selectedScreenView, setSelectedScreenView] = useState<'active' | 'router' | string>('active');
   const [isExporting, setIsExporting] = useState(false);
 
   // Tree View node component
@@ -116,7 +119,7 @@ export const RightSidebar: React.FC = () => {
   const handleDownloadZip = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportProjectZip(components, targetLanguage, 'flex-ui-project');
+      const blob = await exportProjectZip(screens, targetLanguage, 'flex-ui-project');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -203,6 +206,24 @@ export const RightSidebar: React.FC = () => {
             </button>
           </div>
 
+          {/* Screen Scope Selector */}
+          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/90 border-b border-slate-800 text-[11px]">
+            <span className="text-slate-400 font-medium">Screen View:</span>
+            <select
+              value={selectedScreenView}
+              onChange={(e) => setSelectedScreenView(e.target.value)}
+              className="bg-slate-900 border border-slate-700/80 rounded px-2 py-0.5 text-xs text-blue-300 font-medium outline-none cursor-pointer max-w-[200px] truncate"
+            >
+              <option value="active">Active: {activeScreen.name} ({activeScreen.route})</option>
+              {screens.length > 1 && <option value="router">App & Router ({screens.length} Screens)</option>}
+              {screens.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.route})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* HTML / CSS / JS Sub-tabs when language is 'html' */}
           {targetLanguage === 'html' ? (
             <div className="flex border-b border-slate-800 bg-slate-950 text-xs">
@@ -236,29 +257,51 @@ export const RightSidebar: React.FC = () => {
           {/* Code Viewer */}
           <div className="flex-1 overflow-auto p-3">
             {targetLanguage === 'react' && (
-              <SyntaxHighlighter
-                code={generateReactCode(components)}
-                language="typescript"
-                title="React (App.tsx)"
-                maxHeight="calc(100vh - 210px)"
-              />
+              selectedScreenView === 'router' && screens.length > 1 ? (
+                <SyntaxHighlighter
+                  code={generateReactMultiRouter(screens)}
+                  language="typescript"
+                  title="App.tsx (React Router Setup)"
+                  maxHeight="calc(100vh - 240px)"
+                />
+              ) : (
+                <SyntaxHighlighter
+                  code={generateReactCode(
+                    selectedScreenView === 'active'
+                      ? components
+                      : screens.find((s) => s.id === selectedScreenView)?.components || components,
+                    `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Screen`
+                  )}
+                  language="typescript"
+                  title={`React (${activeScreen.name}Screen.tsx)`}
+                  maxHeight="calc(100vh - 240px)"
+                />
+              )
             )}
 
             {targetLanguage === 'vue' && (
               <SyntaxHighlighter
-                code={generateVueCode(components)}
+                code={generateVueCode(
+                  selectedScreenView === 'active'
+                    ? components
+                    : screens.find((s) => s.id === selectedScreenView)?.components || components
+                )}
                 language="vue"
-                title="Vue 3 SFC (App.vue)"
-                maxHeight="calc(100vh - 210px)"
+                title={`Vue 3 (${activeScreen.name}.vue)`}
+                maxHeight="calc(100vh - 240px)"
               />
             )}
 
             {targetLanguage === 'angular' && (
               <SyntaxHighlighter
-                code={generateAngularCode(components)}
+                code={generateAngularCode(
+                  selectedScreenView === 'active'
+                    ? components
+                    : screens.find((s) => s.id === selectedScreenView)?.components || components
+                )}
                 language="typescript"
-                title="Angular Standalone (app.component.ts)"
-                maxHeight="calc(100vh - 210px)"
+                title={`Angular (${activeScreen.name}.component.ts)`}
+                maxHeight="calc(100vh - 240px)"
               />
             )}
 
@@ -266,26 +309,38 @@ export const RightSidebar: React.FC = () => {
               <div>
                 {codeSubTab === 'html' && (
                   <SyntaxHighlighter
-                    code={generateHTML(components)}
+                    code={generateHTML(
+                      selectedScreenView === 'active'
+                        ? components
+                        : screens.find((s) => s.id === selectedScreenView)?.components || components
+                    )}
                     language="html"
-                    title="index.html"
-                    maxHeight="calc(100vh - 240px)"
+                    title={`${activeScreen.name}.html`}
+                    maxHeight="calc(100vh - 260px)"
                   />
                 )}
                 {codeSubTab === 'css' && (
                   <SyntaxHighlighter
-                    code={generateCSS(components)}
+                    code={generateCSS(
+                      selectedScreenView === 'active'
+                        ? components
+                        : screens.find((s) => s.id === selectedScreenView)?.components || components
+                    )}
                     language="css"
                     title="style.css"
-                    maxHeight="calc(100vh - 240px)"
+                    maxHeight="calc(100vh - 260px)"
                   />
                 )}
                 {codeSubTab === 'js' && (
                   <SyntaxHighlighter
-                    code={generateJS(components)}
+                    code={generateJS(
+                      selectedScreenView === 'active'
+                        ? components
+                        : screens.find((s) => s.id === selectedScreenView)?.components || components
+                    )}
                     language="javascript"
                     title="script.js"
-                    maxHeight="calc(100vh - 240px)"
+                    maxHeight="calc(100vh - 260px)"
                   />
                 )}
               </div>

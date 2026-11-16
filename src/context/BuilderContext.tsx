@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import {
   FlexComponent,
   ComponentDefinition,
@@ -8,11 +8,15 @@ import {
   QuickPopupState,
   ComponentStyle,
   ComponentEvent,
+  Screen,
 } from '../types';
 import { COMPONENT_CATALOG } from '../constants/componentCatalog';
 import { PRESET_TEMPLATES } from '../constants/templates';
 
 interface BuilderContextType {
+  screens: Screen[];
+  activeScreenId: string;
+  activeScreen: Screen;
   components: FlexComponent[];
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
@@ -28,6 +32,12 @@ interface BuilderContextType {
   isCreateComponentOpen: boolean;
 
   // Actions
+  addScreen: (name: string, route: string, starterTemplateId?: string) => string;
+  updateScreen: (id: string, updates: Partial<Pick<Screen, 'name' | 'route'>>) => void;
+  deleteScreen: (id: string) => void;
+  duplicateScreen: (id: string) => string;
+  setActiveScreenId: (id: string) => void;
+
   setSelectedComponentId: (id: string | null) => void;
   setHoveredComponentId: (id: string | null) => void;
   setDraggedComponentId: (id: string | null) => void;
@@ -65,10 +75,176 @@ interface BuilderContextType {
 const BuilderContext = createContext<BuilderContextType | null>(null);
 
 export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with the Login Card template so the user immediately sees a live, beautiful UI
-  const [components, setComponents] = useState<FlexComponent[]>(() => {
-    return JSON.parse(JSON.stringify(PRESET_TEMPLATES[0].components));
+  // Screens state with route support
+  const [screens, setScreens] = useState<Screen[]>(() => {
+    try {
+      const saved = localStorage.getItem('flexui_screens');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading screens from localStorage:', e);
+    }
+    const homeComponents: FlexComponent[] = JSON.parse(JSON.stringify(PRESET_TEMPLATES[0].components));
+    // Link login button on Screen 1 to Dashboard Screen!
+    const submitBtn = homeComponents[0]?.children?.find((c) => c.id === 'comp-login-submit');
+    if (submitBtn) {
+      submitBtn.props.navigateToScreenId = 'screen-dashboard';
+      submitBtn.props.targetRoute = '/dashboard';
+    }
+
+    const dashboardComponents: FlexComponent[] = JSON.parse(JSON.stringify(PRESET_TEMPLATES[1].components));
+
+    return [
+      {
+        id: 'screen-home',
+        name: 'Home / Login',
+        route: '/',
+        components: homeComponents,
+      },
+      {
+        id: 'screen-dashboard',
+        name: 'User Dashboard',
+        route: '/dashboard',
+        components: dashboardComponents,
+      },
+    ];
   });
+
+  const [activeScreenId, setActiveScreenIdState] = useState<string>('screen-home');
+
+  // Auto-sync screens to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('flexui_screens', JSON.stringify(screens));
+    } catch (e) {
+      console.error('Failed to sync screens to localStorage:', e);
+    }
+  }, [screens]);
+
+  const activeScreen = useMemo(() => {
+    return (
+      screens.find((s) => s.id === activeScreenId) ||
+      screens[0] || {
+        id: 'default',
+        name: 'Home Screen',
+        route: '/',
+        components: [],
+      }
+    );
+  }, [screens, activeScreenId]);
+
+  const components = activeScreen.components;
+
+  const setComponents = useCallback(
+    (action: React.SetStateAction<FlexComponent[]>) => {
+      setScreens((prevScreens) => {
+        return prevScreens.map((screen) => {
+          if (screen.id === activeScreenId) {
+            const nextComponents = typeof action === 'function' ? action(screen.components) : action;
+            return { ...screen, components: nextComponents };
+          }
+          return screen;
+        });
+      });
+    },
+    [activeScreenId]
+  );
+
+  const setActiveScreenId = useCallback((id: string) => {
+    setActiveScreenIdState(id);
+    setSelectedComponentId(null);
+    setContextMenu((prev) => ({ ...prev, isOpen: false }));
+    setQuickPopup((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const addScreen = useCallback(
+    (name: string, route: string, starterTemplateId?: string): string => {
+      const id = `screen-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString(36)}`;
+      let initialComponents: FlexComponent[] = [];
+      if (starterTemplateId) {
+        const t = PRESET_TEMPLATES.find((p) => p.id === starterTemplateId);
+        if (t) initialComponents = JSON.parse(JSON.stringify(t.components));
+      }
+      const cleanRoute = route.startsWith('/') ? route : `/${route}`;
+      const newScreen: Screen = {
+        id,
+        name: name.trim() || 'New Screen',
+        route: cleanRoute,
+        components: initialComponents,
+      };
+      setScreens((prev) => [...prev, newScreen]);
+      setActiveScreenId(id);
+      return id;
+    },
+    [setActiveScreenId]
+  );
+
+  const updateScreen = useCallback((id: string, updates: Partial<Pick<Screen, 'name' | 'route'>>) => {
+    setScreens((prev) =>
+      prev.map((s) => {
+        if (s.id === id) {
+          const route = updates.route
+            ? updates.route.startsWith('/')
+              ? updates.route
+              : `/${updates.route}`
+            : s.route;
+          return {
+            ...s,
+            name: updates.name !== undefined ? updates.name : s.name,
+            route,
+          };
+        }
+        return s;
+      })
+    );
+  }, []);
+
+  const deleteScreen = useCallback(
+    (id: string) => {
+      setScreens((prev) => {
+        if (prev.length <= 1) {
+          alert('At least one screen must remain in the project.');
+          return prev;
+        }
+        const filtered = prev.filter((s) => s.id !== id);
+        if (activeScreenId === id) {
+          setActiveScreenIdState(filtered[0].id);
+        }
+        return filtered;
+      });
+    },
+    [activeScreenId]
+  );
+
+  const duplicateScreen = useCallback(
+    (id: string): string => {
+      const source = screens.find((s) => s.id === id);
+      if (!source) return id;
+
+      const newId = `screen-${Date.now().toString(36)}`;
+      function cloneNodes(nodes: FlexComponent[]): FlexComponent[] {
+        return nodes.map((n) => {
+          const cId = `comp-${n.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+          return {
+            ...n,
+            id: cId,
+            children: n.children ? cloneNodes(n.children) : undefined,
+          };
+        });
+      }
+
+      const dup: Screen = {
+        id: newId,
+        name: `${source.name} (Copy)`,
+        route: `${source.route}-copy`,
+        components: cloneNodes(source.components),
+      };
+
+      setScreens((prev) => [...prev, dup]);
+      setActiveScreenId(newId);
+      return newId;
+    },
+    [screens, setActiveScreenId]
+  );
 
   // Dynamic Custom Components registered by user
   const [customComponents, setCustomComponents] = useState<ComponentDefinition[]>(() => {
@@ -755,6 +931,14 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [components, historyFuture]);
 
   const value = {
+    screens,
+    activeScreenId,
+    activeScreen,
+    addScreen,
+    updateScreen,
+    deleteScreen,
+    duplicateScreen,
+    setActiveScreenId,
     components,
     selectedComponentId,
     hoveredComponentId,

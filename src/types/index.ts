@@ -65,6 +65,13 @@ export interface FlexComponent {
   parentId?: string | null;
 }
 
+export interface Screen {
+  id: string;
+  name: string;
+  route: string;
+  components: FlexComponent[];
+}
+
 export interface ComponentDefinition {
   type: string;
   name: string;

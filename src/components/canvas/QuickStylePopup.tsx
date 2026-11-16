@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilder } from '../../context/BuilderContext';
-import { X, Palette, Sliders, Code2, Play, Check, Plus, Trash2 } from 'lucide-react';
+import { X, Palette, Sliders, Code2, Play, Check, Plus, Trash2, Compass, ArrowRight } from 'lucide-react';
 import { ComponentEvent } from '../../types';
 
 export const QuickStylePopup: React.FC = () => {
@@ -11,6 +11,7 @@ export const QuickStylePopup: React.FC = () => {
     updateComponentStyles,
     updateComponentProps,
     updateComponentEvents,
+    screens,
   } = useBuilder();
 
   const [activeTab, setActiveTab] = useState<'styles' | 'props' | 'events'>('styles');
@@ -383,6 +384,42 @@ export const QuickStylePopup: React.FC = () => {
                 <span className="text-slate-300">Checked by default</span>
               </div>
             )}
+
+            {/* Screen Navigation / Route on Click */}
+            <div className="pt-3 border-t border-slate-800">
+              <label className="text-purple-400 font-semibold block mb-1 text-[11px] flex items-center gap-1.5">
+                <Compass size={13} />
+                <span>Navigate to Screen on Click (Routing)</span>
+              </label>
+              <select
+                value={props.navigateToScreenId || ''}
+                onChange={(e) => {
+                  const targetScreenId = e.target.value;
+                  const targetScreen = screens.find((s) => s.id === targetScreenId);
+                  updateComponentProps(component.id, {
+                    navigateToScreenId: targetScreenId || undefined,
+                    targetRoute: targetScreen ? targetScreen.route : undefined,
+                  });
+                }}
+                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-200 outline-none text-xs cursor-pointer focus:border-purple-500"
+              >
+                <option value="">None (No screen routing)</option>
+                {screens.map((screen) => (
+                  <option key={screen.id} value={screen.id}>
+                    {screen.name} ({screen.route})
+                  </option>
+                ))}
+              </select>
+              {props.navigateToScreenId && (
+                <div className="flex items-center gap-1.5 text-[10px] text-purple-300 bg-purple-950/40 border border-purple-500/30 p-2 rounded-md mt-2">
+                  <ArrowRight size={12} className="shrink-0" />
+                  <span>
+                    When clicked in interactive preview, transitions to{' '}
+                    <strong className="text-white font-mono">{props.targetRoute}</strong>
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

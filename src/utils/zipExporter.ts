@@ -1,21 +1,57 @@
 import JSZip from 'jszip';
-import { FlexComponent, TargetLanguage } from '../types';
-import { generateReactCode } from './codeGenerators/reactGenerator';
+import { FlexComponent, TargetLanguage, Screen } from '../types';
+import { generateReactCode, generateReactMultiRouter } from './codeGenerators/reactGenerator';
 import { generateVueCode } from './codeGenerators/vueGenerator';
 import { generateAngularCode } from './codeGenerators/angularGenerator';
 import { generateHTML, generateCSS, generateJS } from './codeGenerators/htmlCssJsGenerator';
 
+function toPascalCase(str: string): string {
+  return str
+    .replace(/[^a-zA-Z0-9]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+}
+
 export async function exportProjectZip(
-  components: FlexComponent[],
+  screensOrComponents: Screen[] | FlexComponent[],
   language: TargetLanguage,
   projectName = 'flex-ui-project'
 ): Promise<Blob> {
   const zip = new JSZip();
 
+  // Normalize into screens array
+  const isMultiScreen =
+    Array.isArray(screensOrComponents) &&
+    screensOrComponents.length > 0 &&
+    'route' in screensOrComponents[0];
+
+  const screens: Screen[] = isMultiScreen
+    ? (screensOrComponents as Screen[])
+    : [
+        {
+          id: 'screen-main',
+          name: 'Home',
+          route: '/',
+          components: screensOrComponents as FlexComponent[],
+        },
+      ];
+
+  const primaryComponents = screens[0].components;
+
   if (language === 'react') {
-    // React Vite Scaffolding
-    const appTsx = generateReactCode(components);
-    zip.file('src/App.tsx', appTsx);
+    // React Multi-Screen Routing Scaffolding
+    if (screens.length > 1) {
+      screens.forEach((s) => {
+        const compName = `${toPascalCase(s.name)}Screen`;
+        zip.file(`src/pages/${compName}.tsx`, generateReactCode(s.components, compName));
+      });
+      zip.file('src/App.tsx', generateReactMultiRouter(screens));
+    } else {
+      zip.file('src/App.tsx', generateReactCode(primaryComponents));
+    }
+
     zip.file(
       'src/main.tsx',
       `import React from 'react';
@@ -57,6 +93,7 @@ body {
           dependencies: {
             react: '^18.3.1',
             'react-dom': '^18.3.1',
+            'react-router-dom': '^6.28.0',
           },
           devDependencies: {
             '@types/react': '^18.3.18',
@@ -107,7 +144,13 @@ export default defineConfig({
     );
   } else if (language === 'vue') {
     // Vue 3 Vite Scaffolding
-    const appVue = generateVueCode(components);
+    if (screens.length > 1) {
+      screens.forEach((s) => {
+        const viewName = `${toPascalCase(s.name)}View`;
+        zip.file(`src/views/${viewName}.vue`, generateVueCode(s.components, viewName));
+      });
+    }
+    const appVue = generateVueCode(primaryComponents);
     zip.file('src/App.vue', appVue);
     zip.file(
       'src/main.ts',
@@ -166,7 +209,16 @@ export default defineConfig({
     );
   } else if (language === 'angular') {
     // Angular 17+ Scaffolding
-    const appComp = generateAngularCode(components);
+    if (screens.length > 1) {
+      screens.forEach((s) => {
+        const compName = `${toPascalCase(s.name)}Component`;
+        zip.file(
+          `src/app/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.component.ts`,
+          generateAngularCode(s.components, compName)
+        );
+      });
+    }
+    const appComp = generateAngularCode(primaryComponents);
     zip.file('src/app/app.component.ts', appComp);
     zip.file(
       'src/main.ts',
@@ -203,10 +255,20 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
       )
     );
   } else {
-    // Plain HTML / CSS / JS
-    zip.file('index.html', generateHTML(components));
-    zip.file('style.css', generateCSS(components));
-    zip.file('script.js', generateJS(components));
+    // Plain HTML / CSS / JS (Multi-page or single page)
+    if (screens.length > 1) {
+      screens.forEach((s, idx) => {
+        const fileName =
+          idx === 0 || s.route === '/'
+            ? 'index.html'
+            : `${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.html`;
+        zip.file(fileName, generateHTML(s.components));
+      });
+    } else {
+      zip.file('index.html', generateHTML(primaryComponents));
+    }
+    zip.file('style.css', generateCSS(primaryComponents));
+    zip.file('script.js', generateJS(primaryComponents));
   }
 
   // Common README.md

@@ -24,6 +24,8 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
     moveComponent,
     reorderComponent,
     insertComponentAt,
+    screens,
+    setActiveScreenId,
   } = useBuilder();
 
   // Local interactive state for preview mode
@@ -137,9 +139,23 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
     });
   };
 
-  // Handle Click -> Selection & Quick Popup
+  // Handle Click -> Selection & Quick Popup or Screen Routing
   const handleClick = (e: React.MouseEvent) => {
     if (isPreviewMode) {
+      // 1. Check if component is configured to navigate to another screen
+      if (component.props.navigateToScreenId) {
+        setActiveScreenId(component.props.navigateToScreenId);
+        return;
+      }
+      if (component.props.targetRoute) {
+        const target = screens.find((s) => s.route === component.props.targetRoute);
+        if (target) {
+          setActiveScreenId(target.id);
+          return;
+        }
+      }
+
+      // 2. Execute bound custom JS event if present
       triggerBoundEvent('onClick', e);
       return;
     }
@@ -601,6 +617,13 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
               <Trash2 size={12} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Screen Route Navigation Badge */}
+      {!isPreviewMode && (component.props.navigateToScreenId || component.props.targetRoute) && (
+        <div className="absolute top-1 right-1 flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-500/60 px-1.5 py-0.5 rounded text-[10px] font-mono z-20 pointer-events-none shadow-sm">
+          <span>↳ {component.props.targetRoute || screens.find((s) => s.id === component.props.navigateToScreenId)?.route || 'Route'}</span>
         </div>
       )}
 
