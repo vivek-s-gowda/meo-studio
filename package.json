@@ -1,7 +1,7 @@
 {
   "name": "meo",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0-alpha",
   "description": "Meo Studio - Interactive Visual UI Development & Scaffolding Studio",
   "author": "vivek <sgowdavivek@gmail.com>",
   "type": "module",

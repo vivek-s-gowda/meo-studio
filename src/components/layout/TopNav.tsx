@@ -72,7 +72,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             <div className="flex items-center gap-1.5">
               <h1 className="text-sm font-bold tracking-tight text-white">Meo</h1>
               <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.2 rounded font-mono font-medium">
-                v1.0
+                v0.1.0-alpha
               </span>
             </div>
             <p className="text-[10px] text-slate-400 hidden sm:block">Visual Studio & Framework Scaffolder</p>

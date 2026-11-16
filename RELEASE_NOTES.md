@@ -1,17 +1,17 @@
-# 🐾 Meo Studio v1.0.0 Release Notes
+# 🐾 Meo Studio v0.1.0-alpha Release Notes
 
 **Release Date:** November 16, 2026  
-**Version:** `1.0.0` (Codename: *"Cat Paw"*)  
-**Git Tag:** [`v1.0.0`](file:///Users/viveks/flexui)  
+**Version:** `0.1.0-alpha` (Codename: *"Cat Paw"*)  
+**Git Tag:** [`v0.1.0-alpha`](file:///Users/viveks/flexui)  
 **License:** MIT  
 
 ---
 
 ## 🌟 Executive Summary
 
-We are proud to introduce **Meo Studio v1.0.0** (formerly FlexUI), a next-generation visual UI design environment and multi-framework code scaffolding platform. Designed for frontend engineers, product teams, and rapid prototypers, Meo unifies visual drag-and-drop authoring, interactive multi-screen routing, real-time bi-directional code editing, dynamic mock data binding, and full production-ready export into **React 18+ (TSX)**, **Vue 3 (SFC)**, **Angular 17+ (Standalone)**, and **Vanilla HTML5/CSS3/JS**.
+We are proud to introduce **Meo Studio v0.1.0-alpha** (formerly FlexUI), a next-generation visual UI design environment and multi-framework code scaffolding platform. Designed for frontend engineers, product teams, and rapid prototypers, Meo unifies visual drag-and-drop authoring, interactive multi-screen routing, real-time bi-directional code editing, dynamic mock data binding, and full production-ready export into **React 18+ (TSX)**, **Vue 3 (SFC)**, **Angular 17+ (Standalone)**, and **Vanilla HTML5/CSS3/JS**.
 
-With v1.0.0, Meo debuts its official **Cat Paw** brand identity, native Apple Silicon and Intel desktop packaging with Electron 33+, and multi-container Docker orchestration.
+With v0.1.0-alpha, Meo debuts its official **Cat Paw** brand identity, native Apple Silicon and Intel desktop packaging with Electron 33+, and multi-container Docker orchestration.
 
 ---
 
