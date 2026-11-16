@@ -1,7 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BuilderProvider } from './context/BuilderContext';
-import { BuilderStudio } from './components/studio/BuilderStudio';
-import { LandingPage } from './components/landing/LandingPage';
+
+// Dynamic code-splitting: Landing page and core studio are partitioned into separate bundles
+const BuilderStudio = lazy(() =>
+  import('./components/studio/BuilderStudio').then((m) => ({ default: m.BuilderStudio }))
+);
+const LandingPage = lazy(() =>
+  import('./components/landing/LandingPage').then((m) => ({ default: m.LandingPage }))
+);
+
+function LoadingFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#070b14] text-slate-100 select-none">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center animate-pulse mb-3 shadow-lg shadow-indigo-500/30">
+        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white text-white">
+          <ellipse cx="6.3" cy="9.1" rx="1.5" ry="2.15" transform="rotate(-28 6.3 9.1)" />
+          <ellipse cx="10.1" cy="6.8" rx="1.65" ry="2.35" transform="rotate(-9 10.1 6.8)" />
+          <ellipse cx="13.9" cy="6.8" rx="1.65" ry="2.35" transform="rotate(9 13.9 6.8)" />
+          <ellipse cx="17.7" cy="9.1" rx="1.5" ry="2.15" transform="rotate(28 17.7 9.1)" />
+          <path d="M 12 12.2 C 11 11.2 8.7 11.2 7.5 12.8 C 6.3 14.3 6.7 16.4 8 18.2 C 9.4 19.8 14.6 19.8 16 18.2 C 17.3 16.4 17.7 14.3 16.5 12.8 C 15.3 11.2 13 11.2 12 12.2 Z" />
+        </svg>
+      </div>
+      <div className="text-xs font-mono text-slate-400">Loading Meo Studio...</div>
+    </div>
+  );
+}
 
 function detectInitialView(): 'app' | 'landing' {
   if (typeof window === 'undefined') return 'landing';
@@ -86,14 +109,20 @@ export default function App() {
   if (isElectron || currentView === 'app') {
     return (
       <BuilderProvider>
-        <BuilderStudio
-          isElectron={isElectron}
-          onNavigateToLanding={!isElectron ? navigateToLanding : undefined}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <BuilderStudio
+            isElectron={isElectron}
+            onNavigateToLanding={!isElectron ? navigateToLanding : undefined}
+          />
+        </Suspense>
       </BuilderProvider>
     );
   }
 
   // Otherwise on web root, render the interactive landing page
-  return <LandingPage onTryNow={navigateToApp} />;
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <LandingPage onTryNow={navigateToApp} />
+    </Suspense>
+  );
 }

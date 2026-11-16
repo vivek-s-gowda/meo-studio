@@ -7,6 +7,16 @@ export default defineConfig({
   plugins: [react()],
   build: {
     emptyOutDir: false,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          icons: ['lucide-react'],
+          jszip: ['jszip'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,
