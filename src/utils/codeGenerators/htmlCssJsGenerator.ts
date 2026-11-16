@@ -120,8 +120,13 @@ export function generateHTML(components: FlexComponent[]): string {
         return `${spaces}<header ${idAttr} class="${classes} app-bar">\n${spaces}  <h2>${comp.props.title || 'App'}</h2>\n${spaces}  <nav>${nav}</nav>\n${spaces}</header>`;
       }
 
-      default:
-        return `${spaces}<div ${idAttr} class="${classes}"></div>`;
+      default: {
+        if (hasChildren) {
+          const body = comp.children!.map((c) => renderComponent(c, indent + 2)).join('\n');
+          return `${spaces}<div ${idAttr} class="${classes}">\n${body}\n${spaces}</div>`;
+        }
+        return `${spaces}<div ${idAttr} class="${classes}">${comp.props.label || comp.props.title || comp.name}</div>`;
+      }
     }
   }
 

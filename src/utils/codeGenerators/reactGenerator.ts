@@ -145,8 +145,13 @@ export function generateReactCode(components: FlexComponent[], componentName = '
         return `${spaces}<div${styleAttr} className="overflow-hidden">\n${spaces}  <div className="h-full bg-blue-500 rounded-full" style={{ width: '${comp.props.value || 50}%' }} />\n${spaces}</div>`;
       }
 
-      default:
-        return `${spaces}<div${styleAttr} />`;
+      default: {
+        if (hasChildren) {
+          const childrenJSX = comp.children!.map((c) => renderJSX(c, indent + 2)).join('\n');
+          return `${spaces}<div${styleAttr}${eventString}>\n${comp.props.title ? `${spaces}  <h3 className="font-bold">{${JSON.stringify(comp.props.title)}}</h3>\n` : ''}${childrenJSX}\n${spaces}</div>`;
+        }
+        return `${spaces}<div${styleAttr}${eventString}>{${JSON.stringify(comp.props.label || comp.props.title || comp.name)}}</div>`;
+      }
     }
   }
 

@@ -7,8 +7,11 @@ import { RightSidebar } from './components/layout/RightSidebar';
 import { ScaffoldModal } from './components/modals/ScaffoldModal';
 import { AIAssistantModal } from './components/modals/AIAssistantModal';
 import { TemplatesModal } from './components/modals/TemplatesModal';
+import { CreateCustomComponentModal } from './components/modals/CreateCustomComponentModal';
+import { useBuilder } from './context/BuilderContext';
 
 function BuilderStudio() {
+  const { isCreateComponentOpen, setIsCreateComponentOpen } = useBuilder();
   const [isScaffoldOpen, setIsScaffoldOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
@@ -38,6 +41,10 @@ function BuilderStudio() {
       <ScaffoldModal isOpen={isScaffoldOpen} onClose={() => setIsScaffoldOpen(false)} />
       <AIAssistantModal isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} />
       <TemplatesModal isOpen={isTemplatesOpen} onClose={() => setIsTemplatesOpen(false)} />
+      <CreateCustomComponentModal
+        isOpen={isCreateComponentOpen}
+        onClose={() => setIsCreateComponentOpen(false)}
+      />
     </div>
   );
 }

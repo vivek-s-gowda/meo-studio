@@ -460,8 +460,38 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
           </div>
         );
 
-      default:
-        return <div>{component.name}</div>;
+      default: {
+        if (component.props.customHtml) {
+          return (
+            <div
+              dangerouslySetInnerHTML={{ __html: component.props.customHtml }}
+              className="w-full overflow-hidden"
+            />
+          );
+        }
+
+        if (component.children && component.children.length > 0) {
+          return (
+            <div className="w-full flex flex-col gap-2">
+              {component.props.title && (
+                <h4 className="font-bold text-sm text-inherit">{component.props.title}</h4>
+              )}
+              {component.props.subtitle && (
+                <p className="text-xs opacity-80">{component.props.subtitle}</p>
+              )}
+              {component.children.map((child) => (
+                <CanvasComponent key={child.id} component={child} parentId={component.id} />
+              ))}
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex items-center justify-center font-medium select-none">
+            {component.props.label || component.props.title || component.name}
+          </div>
+        );
+      }
     }
   };
 

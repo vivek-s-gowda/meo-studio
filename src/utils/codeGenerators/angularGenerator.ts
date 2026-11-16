@@ -91,8 +91,13 @@ export function generateAngularCode(components: FlexComponent[], componentName =
         return `${spaces}<div class="${classes} alert">\n${spaces}  <strong>${comp.props.title || 'Notice'}</strong>\n${spaces}  <p>${comp.props.message || ''}</p>\n${spaces}</div>`;
       }
 
-      default:
-        return `${spaces}<div class="${classes}"></div>`;
+      default: {
+        if (hasChildren) {
+          const children = comp.children!.map((c) => renderTemplate(c, indent + 2)).join('\n');
+          return `${spaces}<div class="${classes}"${eventString}>\n${children}\n${spaces}</div>`;
+        }
+        return `${spaces}<div class="${classes}"${eventString}>${comp.props.label || comp.props.title || comp.name}</div>`;
+      }
     }
   }
 

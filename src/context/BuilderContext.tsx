@@ -24,6 +24,8 @@ interface BuilderContextType {
   contextMenu: ContextMenuState;
   quickPopup: QuickPopupState;
   draggedComponentId: string | null;
+  customComponents: ComponentDefinition[];
+  isCreateComponentOpen: boolean;
 
   // Actions
   setSelectedComponentId: (id: string | null) => void;
@@ -32,8 +34,13 @@ interface BuilderContextType {
   setTargetLanguage: (lang: TargetLanguage) => void;
   setViewportMode: (mode: ViewportMode) => void;
   setIsPreviewMode: (preview: boolean) => void;
+  setIsCreateComponentOpen: (open: boolean) => void;
   setContextMenu: React.Dispatch<React.SetStateAction<ContextMenuState>>;
   setQuickPopup: React.Dispatch<React.SetStateAction<QuickPopupState>>;
+
+  registerCustomComponent: (def: ComponentDefinition) => void;
+  deleteCustomComponent: (type: string) => void;
+  saveComponentAsCustom: (componentId: string, name: string, description?: string) => boolean;
 
   addComponent: (def: ComponentDefinition, targetParentId?: string | null, targetIndex?: number) => string;
   insertComponentAt: (def: ComponentDefinition, targetId: string, position: 'before' | 'after' | 'inside') => string;
@@ -63,6 +70,74 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return JSON.parse(JSON.stringify(PRESET_TEMPLATES[0].components));
   });
 
+  // Dynamic Custom Components registered by user
+  const [customComponents, setCustomComponents] = useState<ComponentDefinition[]>(() => {
+    try {
+      const saved = localStorage.getItem('flexui_custom_components');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading custom components:', e);
+    }
+    return [
+      {
+        type: 'custom-hero-cta',
+        name: 'Gradient Hero Banner',
+        category: 'custom',
+        icon: 'Sparkles',
+        description: 'Dynamic gradient callout container with button',
+        isContainer: true,
+        isCustom: true,
+        defaultProps: {
+          title: '🚀 Launching FlexUI Custom Studio',
+          subtitle: 'Create reusable components and export across modern frameworks.',
+        },
+        defaultStyles: {
+          width: '100%',
+          padding: '20px 24px',
+          backgroundColor: '#3b0764',
+          borderColor: '#9333ea',
+          borderWidth: '1.5px',
+          borderRadius: '14px',
+          boxShadow: '0 10px 25px -5px rgba(147, 51, 234, 0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        },
+        defaultEvents: [],
+        defaultChildren: [
+          {
+            id: 'hero-badge-chip',
+            type: 'badge',
+            name: 'New Feature Chip',
+            category: 'data-display',
+            props: { text: '✨ DYNAMIC COMPONENT' },
+            styles: { padding: '3px 10px', backgroundColor: '#9333ea', textColor: '#ffffff', borderRadius: '9999px', fontSize: '11px', fontWeight: '700', alignSelf: 'flex-start' },
+            events: [],
+          },
+          {
+            id: 'hero-badge-title',
+            type: 'heading',
+            name: 'Hero Title',
+            category: 'typography',
+            props: { text: 'Build Reusable Components on the Fly', level: 'h2' },
+            styles: { fontSize: '20px', fontWeight: '700', textColor: '#ffffff', margin: '0' },
+            events: [],
+          },
+          {
+            id: 'hero-badge-btn',
+            type: 'button',
+            name: 'Action Button',
+            category: 'buttons',
+            props: { label: 'Explore Custom Palette →', variant: 'contained' },
+            styles: { padding: '10px 20px', backgroundColor: '#a855f7', textColor: '#ffffff', borderRadius: '8px', fontWeight: '600', alignSelf: 'flex-start', cursor: 'pointer' },
+            events: [{ event: 'onClick', functionName: 'onHeroAction', customCode: "alert('Dynamic Component Action Triggered!');" }],
+          },
+        ],
+      },
+    ];
+  });
+
+  const [isCreateComponentOpen, setIsCreateComponentOpen] = useState<boolean>(false);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(null);
   const [draggedComponentId, setDraggedComponentId] = useState<string | null>(null);
@@ -119,21 +194,100 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return findComponentById(selectedComponentId);
   }, [selectedComponentId, findComponentById]);
 
+  // Register dynamic custom component
+  const registerCustomComponent = useCallback((def: ComponentDefinition) => {
+    setCustomComponents((prev) => {
+      const existing = prev.filter((c) => c.type !== def.type);
+      const updated = [def, ...existing];
+      try {
+        localStorage.setItem('flexui_custom_components', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save custom component to localStorage:', e);
+      }
+      return updated;
+    });
+  }, []);
+
+  // Delete dynamic custom component
+  const deleteCustomComponent = useCallback((type: string) => {
+    setCustomComponents((prev) => {
+      const updated = prev.filter((c) => c.type !== type);
+      try {
+        localStorage.setItem('flexui_custom_components', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to delete custom component from localStorage:', e);
+      }
+      return updated;
+    });
+  }, []);
+
+  // Save selected canvas component as a reusable dynamic component
+  const saveComponentAsCustom = useCallback(
+    (componentId: string, name: string, description?: string): boolean => {
+      const comp = findComponentById(componentId);
+      if (!comp) return false;
+
+      const typeSlug = `custom-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString(36)}`;
+
+      function sanitizeTree(node: FlexComponent): FlexComponent {
+        return {
+          ...node,
+          children: node.children ? node.children.map(sanitizeTree) : undefined,
+        };
+      }
+
+      const newDef: ComponentDefinition = {
+        type: typeSlug,
+        name: name.trim() || comp.name,
+        category: 'custom',
+        icon: 'Sparkles',
+        description: description || `Custom reusable component based on ${comp.name}`,
+        isContainer: comp.isContainer || (comp.children && comp.children.length > 0),
+        isCustom: true,
+        defaultProps: JSON.parse(JSON.stringify(comp.props)),
+        defaultStyles: JSON.parse(JSON.stringify(comp.styles)),
+        defaultEvents: JSON.parse(JSON.stringify(comp.events || [])),
+        defaultChildren: comp.children ? comp.children.map(sanitizeTree) : undefined,
+      };
+
+      registerCustomComponent(newDef);
+      return true;
+    },
+    [findComponentById, registerCustomComponent]
+  );
+
   // Add Component from Catalog
   const addComponent = useCallback(
     (def: ComponentDefinition, targetParentId?: string | null, targetIndex?: number): string => {
       recordHistory(components);
       const newId = `comp-${def.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+
+      function cloneChildrenTree(children: FlexComponent[], pId: string): FlexComponent[] {
+        return children.map((c) => {
+          const childId = `comp-${c.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+          return {
+            ...c,
+            id: childId,
+            parentId: pId,
+            children: c.children ? cloneChildrenTree(c.children, childId) : undefined,
+          };
+        });
+      }
+
       const newComp: FlexComponent = {
         id: newId,
         type: def.type,
         name: def.name,
         category: def.category,
-        isContainer: def.isContainer,
+        isContainer: def.isContainer || (def.defaultChildren && def.defaultChildren.length > 0),
         props: JSON.parse(JSON.stringify(def.defaultProps)),
         styles: JSON.parse(JSON.stringify(def.defaultStyles)),
         events: JSON.parse(JSON.stringify(def.defaultEvents || [])),
-        children: def.isContainer ? [] : undefined,
+        children: def.defaultChildren && def.defaultChildren.length > 0
+          ? cloneChildrenTree(def.defaultChildren, newId)
+          : def.isContainer
+          ? []
+          : undefined,
         parentId: targetParentId || null,
       };
 
@@ -296,16 +450,33 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     (def: ComponentDefinition, targetId: string, position: 'before' | 'after' | 'inside'): string => {
       recordHistory(components);
       const newId = `comp-${def.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+
+      function cloneChildrenTree(children: FlexComponent[], pId: string): FlexComponent[] {
+        return children.map((c) => {
+          const childId = `comp-${c.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+          return {
+            ...c,
+            id: childId,
+            parentId: pId,
+            children: c.children ? cloneChildrenTree(c.children, childId) : undefined,
+          };
+        });
+      }
+
       const newComp: FlexComponent = {
         id: newId,
         type: def.type,
         name: def.name,
         category: def.category,
-        isContainer: def.isContainer,
+        isContainer: def.isContainer || (def.defaultChildren && def.defaultChildren.length > 0),
         props: JSON.parse(JSON.stringify(def.defaultProps)),
         styles: JSON.parse(JSON.stringify(def.defaultStyles)),
         events: JSON.parse(JSON.stringify(def.defaultEvents || [])),
-        children: def.isContainer ? [] : undefined,
+        children: def.defaultChildren && def.defaultChildren.length > 0
+          ? cloneChildrenTree(def.defaultChildren, newId)
+          : def.isContainer
+          ? []
+          : undefined,
         parentId: null,
       };
 
@@ -595,14 +766,20 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     contextMenu,
     quickPopup,
     draggedComponentId,
+    customComponents,
+    isCreateComponentOpen,
     setSelectedComponentId,
     setHoveredComponentId,
     setDraggedComponentId,
     setTargetLanguage,
     setViewportMode,
     setIsPreviewMode,
+    setIsCreateComponentOpen,
     setContextMenu,
     setQuickPopup,
+    registerCustomComponent,
+    deleteCustomComponent,
+    saveComponentAsCustom,
     addComponent,
     insertComponentAt,
     addRawComponent,

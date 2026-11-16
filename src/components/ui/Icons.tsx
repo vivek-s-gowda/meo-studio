@@ -44,6 +44,14 @@ import {
   Terminal,
   FileCode,
   Check,
+  Star,
+  Wand2,
+  Rocket,
+  Flame,
+  Shield,
+  Heart,
+  Zap,
+  Box,
 } from 'lucide-react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -98,6 +106,14 @@ export const DynamicIcon: React.FC<IconProps> = ({ name, size = 18, className = 
     Terminal,
     FileCode,
     Check,
+    Star,
+    Wand2,
+    Rocket,
+    Flame,
+    Shield,
+    Heart,
+    Zap,
+    Box,
   };
 
   const IconComponent = iconMap[name] || Layout;
@@ -149,4 +165,12 @@ export {
   Terminal,
   FileCode,
   Check,
+  Star,
+  Wand2,
+  Rocket,
+  Flame,
+  Shield,
+  Heart,
+  Zap,
+  Box,
 };

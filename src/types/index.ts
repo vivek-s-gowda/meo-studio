@@ -5,7 +5,8 @@ export type ComponentCategory =
   | 'typography'
   | 'data-display'
   | 'feedback'
-  | 'navigation';
+  | 'navigation'
+  | 'custom';
 
 export type TargetLanguage = 'react' | 'angular' | 'vue' | 'html';
 
@@ -71,6 +72,8 @@ export interface ComponentDefinition {
   icon: string;
   description: string;
   isContainer?: boolean;
+  isCustom?: boolean;
+  customHtml?: string;
   defaultProps: Record<string, any>;
   defaultStyles: ComponentStyle;
   defaultEvents?: ComponentEvent[];

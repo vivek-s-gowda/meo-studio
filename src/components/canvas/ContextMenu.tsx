@@ -10,6 +10,7 @@ import {
   ChevronDown,
   BoxSelect,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 
 export const ContextMenu: React.FC = () => {
@@ -22,6 +23,7 @@ export const ContextMenu: React.FC = () => {
     removeComponent,
     moveComponent,
     wrapInContainer,
+    saveComponentAsCustom,
   } = useBuilder();
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -110,6 +112,21 @@ export const ContextMenu: React.FC = () => {
 
       {/* Structure & Hierarchy Actions */}
       <div className="p-1 space-y-0.5">
+        <button
+          onClick={() => {
+            const compName = prompt('Enter a name for this reusable custom component:', component.name);
+            if (compName) {
+              saveComponentAsCustom(component.id, compName);
+              alert(`Component "${compName}" saved to your Custom Palette! You can now drag it from the left sidebar anytime.`);
+            }
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+          }}
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-purple-600 hover:text-white text-purple-300 text-left transition-colors font-medium"
+        >
+          <Sparkles size={14} className="text-purple-400" />
+          <span>Save as Reusable Component</span>
+        </button>
+
         <button
           onClick={() => {
             wrapInContainer(component.id);
