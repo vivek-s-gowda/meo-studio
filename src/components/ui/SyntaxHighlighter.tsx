@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, WrapText } from 'lucide-react';
 
 interface SyntaxHighlighterProps {
   code: string;
@@ -15,6 +15,7 @@ export const SyntaxHighlighter: React.FC<SyntaxHighlighterProps> = ({
   maxHeight = '480px',
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isWrapText, setIsWrapText] = useState(true);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -51,8 +52,15 @@ export const SyntaxHighlighter: React.FC<SyntaxHighlighterProps> = ({
 
       return (
         <div key={index} className="flex leading-6 font-mono text-xs hover:bg-slate-800/40">
-          <span className="w-9 select-none text-right pr-4 text-slate-600 font-mono text-[11px]">{index + 1}</span>
-          <span className="flex-1 text-slate-200 whitespace-pre overflow-x-auto" dangerouslySetInnerHTML={{ __html: highlighted || '&nbsp;' }} />
+          <span className="w-9 select-none text-right pr-4 text-slate-600 font-mono text-[11px] shrink-0">
+            {index + 1}
+          </span>
+          <span
+            className={`flex-1 text-slate-200 ${
+              isWrapText ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'
+            }`}
+            dangerouslySetInnerHTML={{ __html: highlighted || '&nbsp;' }}
+          />
         </div>
       );
     });
@@ -60,18 +68,34 @@ export const SyntaxHighlighter: React.FC<SyntaxHighlighterProps> = ({
 
   return (
     <div className="flex flex-col bg-[#090d16] border border-slate-800 rounded-lg overflow-hidden shadow-inner">
-      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 text-xs">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 text-xs select-none">
         <div className="flex items-center gap-2 text-slate-400 font-medium">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
           <span className="uppercase tracking-wider font-mono text-[11px]">{title || language}</span>
         </div>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-mono active:scale-95"
-        >
-          {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-          <span>{copied ? 'Copied' : 'Copy'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Text Wrap Toggle */}
+          <button
+            onClick={() => setIsWrapText(!isWrapText)}
+            title={isWrapText ? 'Disable line wrap' : 'Enable line wrap'}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono transition-colors active:scale-95 ${
+              isWrapText
+                ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
+            }`}
+          >
+            <WrapText size={13} />
+            <span>{isWrapText ? 'Wrap: On' : 'Wrap: Off'}</span>
+          </button>
+
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-mono active:scale-95"
+          >
+            {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+        </div>
       </div>
 
       <div

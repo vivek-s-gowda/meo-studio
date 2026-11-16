@@ -16,6 +16,7 @@ import {
   Trash2,
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Layers,
   Sparkles,
   Check,
@@ -30,6 +31,7 @@ export const RightSidebar: React.FC = () => {
     setTargetLanguage,
     removeComponent,
     duplicateComponent,
+    moveComponent,
     selectedComponent,
     updateComponentStyles,
     updateComponentProps,
@@ -52,7 +54,7 @@ export const RightSidebar: React.FC = () => {
         <div
           onClick={() => setSelectedComponentId(comp.id)}
           style={{ paddingLeft: `${depth * 14 + 10}px` }}
-          className={`flex items-center justify-between py-1.5 pr-2 rounded-md cursor-pointer transition-colors text-xs ${
+          className={`group flex items-center justify-between py-1.5 pr-2 rounded-md cursor-pointer transition-colors text-xs ${
             isSelected
               ? 'bg-blue-600/30 text-blue-300 font-medium border border-blue-500/50'
               : 'hover:bg-slate-800 text-slate-300'
@@ -72,9 +74,29 @@ export const RightSidebar: React.FC = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                moveComponent(comp.id, 'up');
+              }}
+              className="opacity-0 group-hover:opacity-100 hover:opacity-100 p-0.5 text-slate-400 hover:text-blue-300"
+              title="Move Up"
+            >
+              <ChevronUp size={12} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                moveComponent(comp.id, 'down');
+              }}
+              className="opacity-0 group-hover:opacity-100 hover:opacity-100 p-0.5 text-slate-400 hover:text-blue-300"
+              title="Move Down"
+            >
+              <ChevronDown size={12} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
                 removeComponent(comp.id);
               }}
-              className="opacity-0 hover:opacity-100 p-0.5 text-slate-400 hover:text-red-400"
+              className="opacity-0 group-hover:opacity-100 hover:opacity-100 p-0.5 text-slate-400 hover:text-red-400"
               title="Delete"
             >
               <Trash2 size={12} />

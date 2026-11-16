@@ -11,6 +11,9 @@ export const Canvas: React.FC = () => {
     components,
     viewportMode,
     isPreviewMode,
+    draggedComponentId,
+    setDraggedComponentId,
+    reorderComponent,
     setSelectedComponentId,
     setContextMenu,
     addComponent,
@@ -49,6 +52,20 @@ export const Canvas: React.FC = () => {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+
+    // Check if an existing internal component was dragged onto the canvas root
+    const internalId = draggedComponentId || e.dataTransfer.getData('flexui/component-id');
+    if (internalId) {
+      if (components.length > 0) {
+        const lastComponent = components[components.length - 1];
+        if (lastComponent.id !== internalId) {
+          reorderComponent(internalId, lastComponent.id, 'after');
+        }
+      }
+      setDraggedComponentId(null);
+      return;
+    }
+
     const dataStr = e.dataTransfer.getData('application/json');
     if (!dataStr) return;
 

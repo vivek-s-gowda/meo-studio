@@ -23,10 +23,12 @@ interface BuilderContextType {
   canRedo: boolean;
   contextMenu: ContextMenuState;
   quickPopup: QuickPopupState;
+  draggedComponentId: string | null;
 
   // Actions
   setSelectedComponentId: (id: string | null) => void;
   setHoveredComponentId: (id: string | null) => void;
+  setDraggedComponentId: (id: string | null) => void;
   setTargetLanguage: (lang: TargetLanguage) => void;
   setViewportMode: (mode: ViewportMode) => void;
   setIsPreviewMode: (preview: boolean) => void;
@@ -34,7 +36,9 @@ interface BuilderContextType {
   setQuickPopup: React.Dispatch<React.SetStateAction<QuickPopupState>>;
 
   addComponent: (def: ComponentDefinition, targetParentId?: string | null, targetIndex?: number) => string;
+  insertComponentAt: (def: ComponentDefinition, targetId: string, position: 'before' | 'after' | 'inside') => string;
   addRawComponent: (component: FlexComponent, targetParentId?: string | null) => void;
+  reorderComponent: (sourceId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
   updateComponentStyles: (id: string, styles: Partial<ComponentStyle>) => void;
   updateComponentProps: (id: string, props: Record<string, any>) => void;
   updateComponentEvents: (id: string, events: ComponentEvent[]) => void;
@@ -61,6 +65,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(null);
+  const [draggedComponentId, setDraggedComponentId] = useState<string | null>(null);
   const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>('react');
   const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop');
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
@@ -194,6 +199,162 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return insertRecursive(prev);
       });
       setSelectedComponentId(component.id);
+    },
+    [components, recordHistory]
+  );
+
+  const isAncestor = useCallback(
+    (ancestorId: string, descendantId: string): boolean => {
+      const ancestor = findInTree(components, ancestorId);
+      if (!ancestor || !ancestor.children) return false;
+      return !!findInTree(ancestor.children, descendantId);
+    },
+    [components, findInTree]
+  );
+
+  // Reorder / Move component anywhere inside the canvas
+  const reorderComponent = useCallback(
+    (sourceId: string, targetId: string, position: 'before' | 'after' | 'inside') => {
+      if (sourceId === targetId) return;
+      if (isAncestor(sourceId, targetId)) return;
+
+      recordHistory(components);
+
+      let detached: FlexComponent | null = null;
+      const detachRecursive = (list: FlexComponent[]): FlexComponent[] => {
+        const next: FlexComponent[] = [];
+        for (const item of list) {
+          if (item.id === sourceId) {
+            detached = item;
+          } else {
+            if (item.children) {
+              next.push({ ...item, children: detachRecursive(item.children) });
+            } else {
+              next.push(item);
+            }
+          }
+        }
+        return next;
+      };
+
+      const treeWithoutSource = detachRecursive(components);
+      if (!detached) return;
+
+      if (position === 'inside') {
+        const insertInside = (list: FlexComponent[]): FlexComponent[] => {
+          return list.map((item) => {
+            if (item.id === targetId) {
+              return {
+                ...item,
+                children: [...(item.children || []), { ...detached!, parentId: targetId }],
+              };
+            }
+            if (item.children) {
+              return { ...item, children: insertInside(item.children) };
+            }
+            return item;
+          });
+        };
+        setComponents(insertInside(treeWithoutSource));
+      } else {
+        const insertRelative = (
+          list: FlexComponent[],
+          parentId: string | null
+        ): { list: FlexComponent[]; inserted: boolean } => {
+          const index = list.findIndex((c) => c.id === targetId);
+          if (index !== -1) {
+            const next = [...list];
+            const insertIndex = position === 'before' ? index : index + 1;
+            next.splice(insertIndex, 0, { ...detached!, parentId });
+            return { list: next, inserted: true };
+          }
+          let wasInserted = false;
+          const updatedList = list.map((item) => {
+            if (item.children && !wasInserted) {
+              const res = insertRelative(item.children, item.id);
+              if (res.inserted) {
+                wasInserted = true;
+                return { ...item, children: res.list };
+              }
+            }
+            return item;
+          });
+          return { list: updatedList, inserted: wasInserted };
+        };
+
+        const result = insertRelative(treeWithoutSource, null);
+        setComponents(result.list);
+      }
+
+      setSelectedComponentId(sourceId);
+    },
+    [components, isAncestor, recordHistory]
+  );
+
+  // Insert a new component relative to an existing target
+  const insertComponentAt = useCallback(
+    (def: ComponentDefinition, targetId: string, position: 'before' | 'after' | 'inside'): string => {
+      recordHistory(components);
+      const newId = `comp-${def.type}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 5)}`;
+      const newComp: FlexComponent = {
+        id: newId,
+        type: def.type,
+        name: def.name,
+        category: def.category,
+        isContainer: def.isContainer,
+        props: JSON.parse(JSON.stringify(def.defaultProps)),
+        styles: JSON.parse(JSON.stringify(def.defaultStyles)),
+        events: JSON.parse(JSON.stringify(def.defaultEvents || [])),
+        children: def.isContainer ? [] : undefined,
+        parentId: null,
+      };
+
+      if (position === 'inside') {
+        const insertInside = (list: FlexComponent[]): FlexComponent[] => {
+          return list.map((item) => {
+            if (item.id === targetId) {
+              return {
+                ...item,
+                children: [...(item.children || []), { ...newComp, parentId: targetId }],
+              };
+            }
+            if (item.children) {
+              return { ...item, children: insertInside(item.children) };
+            }
+            return item;
+          });
+        };
+        setComponents(insertInside(components));
+      } else {
+        const insertRelative = (
+          list: FlexComponent[],
+          parentId: string | null
+        ): { list: FlexComponent[]; inserted: boolean } => {
+          const index = list.findIndex((c) => c.id === targetId);
+          if (index !== -1) {
+            const next = [...list];
+            const insertIndex = position === 'before' ? index : index + 1;
+            next.splice(insertIndex, 0, { ...newComp, parentId });
+            return { list: next, inserted: true };
+          }
+          let wasInserted = false;
+          const updatedList = list.map((item) => {
+            if (item.children && !wasInserted) {
+              const res = insertRelative(item.children, item.id);
+              if (res.inserted) {
+                wasInserted = true;
+                return { ...item, children: res.list };
+              }
+            }
+            return item;
+          });
+          return { list: updatedList, inserted: wasInserted };
+        };
+        setComponents(insertRelative(components, null).list);
+      }
+
+      setSelectedComponentId(newId);
+      return newId;
     },
     [components, recordHistory]
   );
@@ -433,15 +594,19 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     canRedo: historyFuture.length > 0,
     contextMenu,
     quickPopup,
+    draggedComponentId,
     setSelectedComponentId,
     setHoveredComponentId,
+    setDraggedComponentId,
     setTargetLanguage,
     setViewportMode,
     setIsPreviewMode,
     setContextMenu,
     setQuickPopup,
     addComponent,
+    insertComponentAt,
     addRawComponent,
+    reorderComponent,
     updateComponentStyles,
     updateComponentProps,
     updateComponentEvents,
