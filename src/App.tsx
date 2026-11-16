@@ -1,63 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BuilderProvider } from './context/BuilderContext';
-import { TopNav } from './components/layout/TopNav';
-import { LeftSidebar } from './components/layout/LeftSidebar';
-import { Canvas } from './components/canvas/Canvas';
-import { RightSidebar } from './components/layout/RightSidebar';
-import { ScaffoldModal } from './components/modals/ScaffoldModal';
-import { AIAssistantModal } from './components/modals/AIAssistantModal';
-import { TemplatesModal } from './components/modals/TemplatesModal';
-import { CreateCustomComponentModal } from './components/modals/CreateCustomComponentModal';
-import { DataSourcesModal } from './components/modals/DataSourcesModal';
-import { useBuilder } from './context/BuilderContext';
+import { BuilderStudio } from './components/studio/BuilderStudio';
+import { LandingPage } from './components/landing/LandingPage';
 
-function BuilderStudio() {
-  const { isCreateComponentOpen, setIsCreateComponentOpen, isDataSourcesModalOpen, setIsDataSourcesModalOpen } = useBuilder();
-  const [isScaffoldOpen, setIsScaffoldOpen] = useState(false);
-  const [isAIOpen, setIsAIOpen] = useState(false);
-  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+function detectInitialView(): 'app' | 'landing' {
+  if (typeof window === 'undefined') return 'landing';
 
-  return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0b0f19] text-slate-100 font-sans">
-      {/* Top Bar with Language Selector & Controls */}
-      <TopNav
-        onOpenScaffoldModal={() => setIsScaffoldOpen(true)}
-        onOpenAIModal={() => setIsAIOpen(true)}
-        onOpenTemplatesModal={() => setIsTemplatesOpen(true)}
-      />
-
-      {/* Main Studio Body: Left Sidebar + Canvas Playground + Right Sidebar */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Left: Material UI Controls Palette */}
-        <LeftSidebar />
-
-        {/* Center: Interactive Playground Canvas */}
-        <Canvas />
-
-        {/* Right: Component Structure Tree & Multi-Language Code Inspector */}
-        <RightSidebar />
-      </div>
-
-      {/* Modals */}
-      <ScaffoldModal isOpen={isScaffoldOpen} onClose={() => setIsScaffoldOpen(false)} />
-      <AIAssistantModal isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} />
-      <TemplatesModal isOpen={isTemplatesOpen} onClose={() => setIsTemplatesOpen(false)} />
-      <CreateCustomComponentModal
-        isOpen={isCreateComponentOpen}
-        onClose={() => setIsCreateComponentOpen(false)}
-      />
-      <DataSourcesModal
-        isOpen={isDataSourcesModalOpen}
-        onClose={() => setIsDataSourcesModalOpen(false)}
-      />
-    </div>
+  // 1. Check if running inside Electron Desktop App
+  const isElectron = Boolean(
+    (window as any).electronAPI?.isElectron ||
+    navigator.userAgent.includes('Electron')
   );
+  if (isElectron) {
+    return 'app';
+  }
+
+  // 2. Check subdomain: app.xxx.xx (e.g. app.meo.dev, app.localhost)
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname.startsWith('app.')) {
+    return 'app';
+  }
+
+  // 3. Check path route: /app or /app/...
+  const pathname = window.location.pathname.toLowerCase();
+  if (pathname === '/app' || pathname.startsWith('/app/')) {
+    return 'app';
+  }
+
+  // 4. Check URL hash: #app or #/app
+  const hash = window.location.hash.toLowerCase();
+  if (hash === '#app' || hash === '#/app' || hash.startsWith('#/app/')) {
+    return 'app';
+  }
+
+  // 5. Default to interactive landing page on web root /
+  return 'landing';
 }
 
 export default function App() {
-  return (
-    <BuilderProvider>
-      <BuilderStudio />
-    </BuilderProvider>
+  const [currentView, setCurrentView] = useState<'app' | 'landing'>(detectInitialView);
+
+  const isElectron = typeof window !== 'undefined' && Boolean(
+    (window as any).electronAPI?.isElectron ||
+    navigator.userAgent.includes('Electron')
   );
+
+  // Synchronize browser history & popstate
+  useEffect(() => {
+    if (isElectron) return;
+
+    const handleLocationChange = () => {
+      setCurrentView(detectInitialView());
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, [isElectron]);
+
+  const navigateToApp = () => {
+    try {
+      window.history.pushState({}, '', '/app');
+    } catch (e) {
+      window.location.hash = '/app';
+    }
+    setCurrentView('app');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToLanding = () => {
+    try {
+      window.history.pushState({}, '', '/');
+    } catch (e) {
+      window.location.hash = '';
+    }
+    setCurrentView('landing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // If in Electron, directly render the Builder Studio - NEVER load the landing page
+  if (isElectron || currentView === 'app') {
+    return (
+      <BuilderProvider>
+        <BuilderStudio
+          isElectron={isElectron}
+          onNavigateToLanding={!isElectron ? navigateToLanding : undefined}
+        />
+      </BuilderProvider>
+    );
+  }
+
+  // Otherwise on web root, render the interactive landing page
+  return <LandingPage onTryNow={navigateToApp} />;
 }

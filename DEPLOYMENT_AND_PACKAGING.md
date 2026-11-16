@@ -132,21 +132,53 @@ npm run electron:linux
 All packaged binaries, installers, and checksums will be generated in:
 ```
 dist-electron/
-├── Meo Studio-1.0.0-arm64.dmg       (Apple Silicon M1/M2/M3/M4 native)
-├── Meo Studio-1.0.0-arm64-mac.zip   (Apple Silicon portable archive)
-├── Meo Studio-1.0.0-universal.dmg   (Universal Binary for all Macs)
-├── Meo Studio-1.0.0-x64.dmg         (Intel Mac native)
-├── Meo Studio Setup 1.0.0.exe       (Windows NSIS installer)
-└── Meo Studio-1.0.0.AppImage        (Linux standalone binary)
+├── Meo Studio-0.1.0-alpha-arm64.dmg       (Apple Silicon M1/M2/M3/M4 native)
+├── Meo Studio-0.1.0-alpha-arm64-mac.zip   (Apple Silicon portable archive)
+├── Meo Studio-0.1.0-alpha-universal.dmg   (Universal Binary for all Macs)
+├── Meo Studio-0.1.0-alpha-x64.dmg         (Intel Mac native)
+├── Meo Studio Setup 0.1.0-alpha.exe       (Windows NSIS installer)
+└── Meo Studio-0.1.0-alpha.AppImage        (Linux standalone binary)
 ```
 
 ---
 
+## Part 3: 🔥 Firebase Hosting & Subdomain Routing
+
+Meo is pre-configured for global CDN deployment with Firebase Hosting.
+
+### 1. Architecture & Routing
+- **Root URL (`/`)**: Displays the animated, interactive **Landing Page** with live demo playground, framework matrix, and smart OS download detection.
+- **Studio URL (`/app` or `app.yourdomain.com`)**: Directly loads the **Core Studio Workspace**.
+- **Desktop Electron App**: Automatically bypasses the landing page and boots straight into the core studio application.
+
+### 2. Deployment to Firebase Hosting
+
+```bash
+# 1. Install Firebase CLI (if not already installed)
+npm install -g firebase-tools
+
+# 2. Login to Firebase
+firebase login
+
+# 3. Build & Deploy
+npm run deploy:firebase
+# or: npm run build && firebase deploy --only hosting
+```
+
+### 3. Custom Subdomain Setup (`app.yourdomain.com`)
+In the Firebase Console (Hosting → Custom Domains):
+1. Add `yourdomain.com` → Serves the Landing Page (`/`) with the "Try Now" button pointing to `/app`.
+2. Add `app.yourdomain.com` → Automatically detected by Meo's router, loading the Core Studio App directly on root!
+
+---
+
 ## Configuration Files Reference
+- **[firebase.json](file:///Users/viveks/flexui/firebase.json)**: Firebase Hosting configuration with SPA rewrites for `/app` and asset caching.
+- **[.firebaserc](file:///Users/viveks/flexui/.firebaserc)**: Firebase project target.
 - **[Dockerfile](file:///Users/viveks/flexui/Dockerfile)**: Multi-stage build with Node 20 builder and Nginx 1.27 runtime.
 - **[nginx.conf](file:///Users/viveks/flexui/nginx.conf)**: Production web server configuration with SPA history routing and reverse proxy.
 - **[docker-compose.yml](file:///Users/viveks/flexui/docker-compose.yml)**: Multi-service container orchestration.
-- **[electron/main.cjs](file:///Users/viveks/flexui/electron/main.cjs)**: Electron main process.
+- **[electron/main.cjs](file:///Users/viveks/flexui/electron/main.cjs)**: Electron main process loading `#app`.
 - **[electron/preload.cjs](file:///Users/viveks/flexui/electron/preload.cjs)**: Electron preload bridge.
 - **[electron/dev.cjs](file:///Users/viveks/flexui/electron/dev.cjs)**: Dev launcher script.
 - **[package.json](file:///Users/viveks/flexui/package.json)**: Scripts and `electron-builder` metadata.

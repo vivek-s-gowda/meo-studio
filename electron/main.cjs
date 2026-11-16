@@ -24,19 +24,22 @@ function createWindow() {
     },
   });
 
-  // Load URL or static file
+  // Load URL or static file (always targeting the core Studio app in Electron)
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    const devUrl = process.env.VITE_DEV_SERVER_URL.includes('#')
+      ? process.env.VITE_DEV_SERVER_URL
+      : `${process.env.VITE_DEV_SERVER_URL}#app`;
+    mainWindow.loadURL(devUrl);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else if (isDev) {
-    // Attempt local Vite port in development
-    mainWindow.loadURL('http://localhost:5173').catch(() => {
+    // Attempt local Vite port in development with #app hash
+    mainWindow.loadURL('http://localhost:5173/#app').catch(() => {
       // Fallback to static dist if Vite dev server is not running
-      mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+      mainWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: 'app' });
     });
   } else {
-    // Production packaged app
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Production packaged desktop app directly loads core studio
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: 'app' });
   }
 
   // Graceful show on ready

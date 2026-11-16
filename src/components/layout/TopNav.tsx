@@ -25,12 +25,14 @@ interface TopNavProps {
   onOpenScaffoldModal: () => void;
   onOpenAIModal: () => void;
   onOpenTemplatesModal: () => void;
+  onNavigateToLanding?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
   onOpenScaffoldModal,
   onOpenAIModal,
   onOpenTemplatesModal,
+  onNavigateToLanding,
 }) => {
   const {
     targetLanguage,
@@ -54,8 +56,12 @@ export const TopNav: React.FC<TopNavProps> = ({
     <header className="h-14 w-full bg-[#0d1322] border-b border-slate-800 flex items-center justify-between px-4 select-none z-20">
       {/* Brand & Project Name */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/10 shrink-0">
+        <div
+          onClick={onNavigateToLanding}
+          className={`flex items-center gap-2 ${onNavigateToLanding ? 'cursor-pointer group' : ''}`}
+          title={onNavigateToLanding ? '← Return to Meo Landing Page' : 'Meo Studio'}
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/10 shrink-0 group-hover:scale-105 transition-transform">
             {/* Stylized Cat Paw Brand Logo */}
             <svg
               viewBox="0 0 24 24"
@@ -70,7 +76,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-sm font-bold tracking-tight text-white">Meo</h1>
+              <h1 className="text-sm font-bold tracking-tight text-white group-hover:text-blue-300 transition-colors">Meo</h1>
               <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.2 rounded font-mono font-medium">
                 v0.1.0-alpha
               </span>

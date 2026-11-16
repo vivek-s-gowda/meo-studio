@@ -25,7 +25,8 @@
     "docker:build": "docker build -t meo .",
     "docker:run": "docker run -d -p 3000:80 --name meo-container meo",
     "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "deploy:firebase": "npm run build && npx firebase deploy --only hosting"
   },
   "build": {
     "appId": "com.meo.studio",
