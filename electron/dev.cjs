@@ -1,7 +1,7 @@
 const { spawn } = require('child_process');
 const http = require('http');
 
-console.log('🚀 Starting FlexUI in Electron Development Mode...');
+console.log('🚀 Starting Meo in Electron Development Mode...');
 
 // 1. Start Vite Dev Server
 const viteProcess = spawn('npx', ['vite', '--port', '5173'], {

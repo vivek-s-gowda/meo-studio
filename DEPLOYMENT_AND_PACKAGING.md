@@ -1,12 +1,12 @@
 # 🐳 Dockerization & ⚡ Electron Desktop Bundling Guide
 
-This guide provides end-to-end instructions for deploying **FlexUI** using Docker containers and packaging it as a native desktop application using Electron for macOS, Windows, and Linux.
+This guide provides end-to-end instructions for deploying **Meo** using Docker containers and packaging it as a native desktop application using Electron for macOS, Windows, and Linux.
 
 ---
 
 ## Part 1: 🐳 Dockerization
 
-FlexUI includes both single-container and multi-container Docker workflows.
+Meo includes both single-container and multi-container Docker workflows.
 
 ### Architecture Overview
 - **Frontend SPA**: High-performance Nginx 1.27 Alpine container with gzip compression, security headers, and single-page application (SPA) routing fallback (`try_files $uri $uri/ /index.html;`).
@@ -21,11 +21,11 @@ Build and run the production-optimized web container directly:
 ```bash
 # 1. Build the Docker image
 npm run docker:build
-# or: docker build -t flexui .
+# or: docker build -t meo .
 
 # 2. Run the container on port 3000
 npm run docker:run
-# or: docker run -d -p 3000:80 --name flexui-container flexui
+# or: docker run -d -p 3000:80 --name meo-container meo
 
 # 3. Open in browser
 open http://localhost:3000
@@ -33,13 +33,13 @@ open http://localhost:3000
 
 To stop and remove:
 ```bash
-docker stop flexui-container && docker rm flexui-container
+docker stop meo-container && docker rm meo-container
 ```
 
 ---
 
 ### Option B: Full-Stack Multi-Container Orchestration (`docker-compose`)
-Orchestrates the entire FlexUI ecosystem (Web Studio + Node.js API + Python Microservice):
+Orchestrates the entire Meo ecosystem (Web Studio + Node.js API + Python Microservice):
 
 ```bash
 # Start all services in the background
@@ -60,15 +60,15 @@ npm run docker:down
 #### Service Port Mappings:
 | Service | Container Name | Port | Description |
 |---|---|---|---|
-| **Web Frontend** | `flexui-web` | `http://localhost:3000` | Nginx production SPA with live code editor & canvas |
-| **Node.js Backend** | `flexui-api` | `http://localhost:5001` | Express API & Scaffolding engine |
-| **Python Microservice** | `flexui-python-service` | `http://localhost:5002` | AST analysis & schematic formatting |
+| **Web Frontend** | `meo-web` | `http://localhost:3000` | Nginx production SPA with live code editor & canvas |
+| **Node.js Backend** | `meo-api` | `http://localhost:5001` | Express API & Scaffolding engine |
+| **Python Microservice** | `meo-python-service` | `http://localhost:5002` | AST analysis & schematic formatting |
 
 ---
 
 ## Part 2: ⚡ Desktop Application (Electron)
 
-FlexUI is configured with Electron 33+ and `electron-builder` to bundle into native cross-platform desktop installers.
+Meo is configured with Electron 33+ and `electron-builder` to bundle into native cross-platform desktop installers.
 
 ### Desktop Architecture
 - **[electron/main.cjs](file:///Users/viveks/flexui/electron/main.cjs)**: Main Electron process creating a dark-themed 1440x900 native studio window with application menu, external link handling, and app lifecycle management.
@@ -132,12 +132,12 @@ npm run electron:linux
 All packaged binaries, installers, and checksums will be generated in:
 ```
 dist-electron/
-├── FlexUI Studio-1.0.0-arm64.dmg       (Apple Silicon M1/M2/M3/M4 native)
-├── FlexUI Studio-1.0.0-arm64-mac.zip   (Apple Silicon portable archive)
-├── FlexUI Studio-1.0.0-universal.dmg   (Universal Binary for all Macs)
-├── FlexUI Studio-1.0.0-x64.dmg         (Intel Mac native)
-├── FlexUI Studio Setup 1.0.0.exe       (Windows NSIS installer)
-└── FlexUI Studio-1.0.0.AppImage        (Linux standalone binary)
+├── Meo Studio-1.0.0-arm64.dmg       (Apple Silicon M1/M2/M3/M4 native)
+├── Meo Studio-1.0.0-arm64-mac.zip   (Apple Silicon portable archive)
+├── Meo Studio-1.0.0-universal.dmg   (Universal Binary for all Macs)
+├── Meo Studio-1.0.0-x64.dmg         (Intel Mac native)
+├── Meo Studio Setup 1.0.0.exe       (Windows NSIS installer)
+└── Meo Studio-1.0.0.AppImage        (Linux standalone binary)
 ```
 
 ---

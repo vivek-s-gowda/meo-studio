@@ -411,7 +411,7 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
     'README.md',
     `# ${projectName}
 
-Exported from **FlexUI** Studio with **Modular Component Architecture**.
+Exported from **Meo** Studio with **Modular Component Architecture**.
 
 ### Architecture Overview:
 - 📁 \`src/components/\`: Reusable UI components extracted from canvas elements

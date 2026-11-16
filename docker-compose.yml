@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: flexui-web
+    container_name: meo-web
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -17,7 +17,7 @@ services:
     environment:
       - NODE_ENV=production
     networks:
-      - flexui-net
+      - meo-net
 
   # ----------------------------------------------------------------
   # 2. Node.js Backend API Service (REST & Scaffolding API)
@@ -26,7 +26,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: flexui-api
+    container_name: meo-api
     restart: unless-stopped
     ports:
       - "5001:5001"
@@ -34,7 +34,7 @@ services:
       - PORT=5001
       - NODE_ENV=production
     networks:
-      - flexui-net
+      - meo-net
 
   # ----------------------------------------------------------------
   # 3. Python Schematic Analysis Microservice (AST & Linting)
@@ -48,13 +48,13 @@ services:
         COPY app.py ./
         EXPOSE 5002
         CMD ["python", "app.py"]
-    container_name: flexui-python-service
+    container_name: meo-python-service
     restart: unless-stopped
     ports:
       - "5002:5002"
     networks:
-      - flexui-net
+      - meo-net
 
 networks:
-  flexui-net:
+  meo-net:
     driver: bridge

@@ -382,7 +382,7 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
     icon: 'FileText',
     description: 'Standard material body typography',
     defaultProps: {
-      text: 'FlexUI allows developers to craft reactive interfaces seamlessly with drag-and-drop workflows and instant multi-language code export.',
+      text: 'Meo allows developers to craft reactive interfaces seamlessly with drag-and-drop workflows and instant multi-language code export.',
     },
     defaultStyles: {
       fontSize: '14px',

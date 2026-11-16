@@ -101,7 +101,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Screens state with route support
   const [screens, setScreens] = useState<Screen[]>(() => {
     try {
-      const saved = localStorage.getItem('flexui_screens');
+      const saved = localStorage.getItem('meo_screens') || localStorage.getItem('flexui_screens');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Error loading screens from localStorage:', e);
@@ -137,7 +137,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Auto-sync screens to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('flexui_screens', JSON.stringify(screens));
+      localStorage.setItem('meo_screens', JSON.stringify(screens));
     } catch (e) {
       console.error('Failed to sync screens to localStorage:', e);
     }
@@ -278,7 +278,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Dynamic Custom Components registered by user
   const [customComponents, setCustomComponents] = useState<ComponentDefinition[]>(() => {
     try {
-      const saved = localStorage.getItem('flexui_custom_components');
+      const saved = localStorage.getItem('meo_custom_components') || localStorage.getItem('flexui_custom_components');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Error loading custom components:', e);
@@ -293,7 +293,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isContainer: true,
         isCustom: true,
         defaultProps: {
-          title: '🚀 Launching FlexUI Custom Studio',
+          title: '🚀 Launching Meo Custom Studio',
           subtitle: 'Create reusable components and export across modern frameworks.',
         },
         defaultStyles: {
@@ -348,7 +348,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Data Sources State
   const [dataSources, setDataSources] = useState<DataSource[]>(() => {
     try {
-      const saved = localStorage.getItem('flexui_datasources');
+      const saved = localStorage.getItem('meo_datasources') || localStorage.getItem('flexui_datasources');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Error loading data sources from localStorage:', e);
@@ -360,7 +360,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     try {
-      localStorage.setItem('flexui_datasources', JSON.stringify(dataSources));
+      localStorage.setItem('meo_datasources', JSON.stringify(dataSources));
     } catch (e) {
       console.error('Failed to sync data sources to localStorage:', e);
     }
@@ -462,7 +462,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Modular Component Architecture State
   const [isModularMode, setIsModularMode] = useState<boolean>(() => {
     try {
-      const saved = localStorage.getItem('flexui_modular_mode');
+      const saved = localStorage.getItem('meo_modular_mode') || localStorage.getItem('flexui_modular_mode');
       if (saved !== null) return JSON.parse(saved);
     } catch (e) {}
     return true; // Default to modular components mode
@@ -472,7 +472,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsModularMode((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('flexui_modular_mode', JSON.stringify(next));
+        localStorage.setItem('meo_modular_mode', JSON.stringify(next));
       } catch (e) {}
       return next;
     });
@@ -533,7 +533,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const existing = prev.filter((c) => c.type !== def.type);
       const updated = [def, ...existing];
       try {
-        localStorage.setItem('flexui_custom_components', JSON.stringify(updated));
+        localStorage.setItem('meo_custom_components', JSON.stringify(updated));
       } catch (e) {
         console.error('Failed to save custom component to localStorage:', e);
       }
@@ -546,7 +546,7 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCustomComponents((prev) => {
       const updated = prev.filter((c) => c.type !== type);
       try {
-        localStorage.setItem('flexui_custom_components', JSON.stringify(updated));
+        localStorage.setItem('meo_custom_components', JSON.stringify(updated));
       } catch (e) {
         console.error('Failed to delete custom component from localStorage:', e);
       }

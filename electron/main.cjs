@@ -12,7 +12,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 700,
     backgroundColor: '#0b0f19',
-    title: 'FlexUI Studio - Visual UI Development Studio',
+    title: 'Meo Studio - Visual UI Development Studio',
     icon: path.join(__dirname, 'icons/icon.png'),
     show: false, // Show once ready-to-show to prevent white flash
     webPreferences: {

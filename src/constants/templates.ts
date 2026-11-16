@@ -22,7 +22,7 @@ export const PRESET_TEMPLATES: Template[] = [
         category: 'layout',
         isContainer: true,
         props: {
-          title: 'Sign In to FlexUI',
+          title: 'Sign In to Meo',
           subtitle: 'Enter your credentials below to access your workspace',
         },
         styles: {

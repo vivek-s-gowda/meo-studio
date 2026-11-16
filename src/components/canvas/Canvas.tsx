@@ -55,7 +55,7 @@ export const Canvas: React.FC = () => {
     e.preventDefault();
 
     // Check if an existing internal component was dragged onto the canvas root
-    const internalId = draggedComponentId || e.dataTransfer.getData('flexui/component-id');
+    const internalId = draggedComponentId || e.dataTransfer.getData('meo/component-id') || e.dataTransfer.getData('flexui/component-id');
     if (internalId) {
       if (components.length > 0) {
         const lastComponent = components[components.length - 1];

@@ -1,6 +1,6 @@
-# FlexUI - Visual UI Studio & Framework Scaffolder
+# Meo - Visual UI Studio & Framework Scaffolder
 
-**FlexUI** is a modern visual UI builder and code generator designed for rapid frontend prototyping and multi-framework scaffolding. Craft Material-styled interfaces visually with intuitive drag-and-drop, configure properties & styles, bind JavaScript functions to controls, and instantly compile your layout into **React (TSX)**, **Vue 3 (SFC)**, **Angular 17+ (Standalone)**, or **Vanilla HTML/CSS/JS**.
+**Meo** is a modern visual UI builder and code generator designed for rapid frontend prototyping and multi-framework scaffolding. Craft Material-styled interfaces visually with intuitive drag-and-drop, configure properties & styles, bind JavaScript functions to controls, and instantly compile your layout into **React (TSX)**, **Vue 3 (SFC)**, **Angular 17+ (Standalone)**, or **Vanilla HTML/CSS/JS**.
 
 ---
 
@@ -36,8 +36,8 @@
 - **One-Click Scaffold ZIP**: Downloads a complete, production-ready project archive with `package.json`, configuration files (`vite.config.ts`, `tailwind.config.js`), and source code ready to run with `npm install && npm run dev`.
 - **Switch Languages Anytime**: Toggle between React, Vue, Angular, or Vanilla HTML at any point without losing your design.
 
-### 5. FlexAI Assistant Suite
-- **Prompt-to-UI Synthesis**: Describe a layout in plain English (e.g., *"Material login card with email, password, remember me checkbox, and submit button"*) and watch FlexUI generate and place the component hierarchy automatically.
+### 5. Meo AI Assistant Suite
+- **Prompt-to-UI Synthesis**: Describe a layout in plain English (e.g., *"Material login card with email, password, remember me checkbox, and submit button"*) and watch Meo generate and place the component hierarchy automatically.
 - **Stack Architecture Prompts**: Ready-to-use system prompts tailored for React, Vue, Angular, Node.js backend, and Python microservices.
 - **Python AST Microservice**: Lightweight Python backend service (`python_service/app.py`) for semantic code inspection, AST validation, and token analysis.
 

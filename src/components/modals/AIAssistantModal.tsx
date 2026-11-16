@@ -55,7 +55,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <span>FlexUI AI Suite</span>
+                <span>Meo AI Suite</span>
                 <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-mono">
                   Smart Assistant
                 </span>
@@ -236,7 +236,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
                   <span>Python AST & Schematic Code Analyzer Service</span>
                 </div>
                 <p className="text-slate-400 leading-relaxed">
-                  FlexUI includes a lightweight Python microservice located at{' '}
+                  Meo includes a lightweight Python microservice located at{' '}
                   <code className="text-indigo-300 font-mono">python_service/app.py</code>. It performs AST
                   validation, token categorization (schematic highlighting), and code formatting for exported
                   code.

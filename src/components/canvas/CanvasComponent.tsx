@@ -59,7 +59,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
     if (isPreviewMode) return;
     e.stopPropagation();
     setDraggedComponentId(component.id);
-    e.dataTransfer.setData('flexui/component-id', component.id);
+    e.dataTransfer.setData('meo/component-id', component.id);
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -118,7 +118,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = ({ component, par
     setDropPosition(null);
 
     // 1. Move an existing component within canvas
-    const internalId = draggedComponentId || e.dataTransfer.getData('flexui/component-id');
+    const internalId = draggedComponentId || e.dataTransfer.getData('meo/component-id') || e.dataTransfer.getData('flexui/component-id');
     if (internalId) {
       if (internalId !== component.id) {
         reorderComponent(internalId, component.id, targetPos);
