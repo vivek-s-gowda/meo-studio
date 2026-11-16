@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "Meo Studio - Interactive Visual UI Development & Scaffolding Studio",
-  "author": "Meo Team <team@meo.dev>",
+  "author": "vivek <sgowdavivek@gmail.com>",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
