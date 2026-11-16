@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useBuilder } from '../../context/BuilderContext';
 import { SyntaxHighlighter } from '../ui/SyntaxHighlighter';
 import { generateHTML, generateCSS, generateJS } from '../../utils/codeGenerators/htmlCssJsGenerator';
@@ -6,6 +6,14 @@ import { generateReactCode, generateReactMultiRouter } from '../../utils/codeGen
 import { generateVueCode } from '../../utils/codeGenerators/vueGenerator';
 import { generateAngularCode } from '../../utils/codeGenerators/angularGenerator';
 import { exportProjectZip } from '../../utils/zipExporter';
+import {
+  decomposeScreens,
+  generateModularReactScreen,
+  generateModularVueScreen,
+  generateModularVueRouter,
+  generateModularAngularScreen,
+  generateModularAngularRoutes,
+} from '../../utils/componentDecomposer';
 import { FlexComponent } from '../../types';
 import {
   FolderTree,
@@ -21,6 +29,7 @@ import {
   Sparkles,
   Check,
   Database,
+  Boxes,
 } from 'lucide-react';
 
 export const RightSidebar: React.FC = () => {
@@ -40,7 +49,11 @@ export const RightSidebar: React.FC = () => {
     updateComponentProps,
     dataSources,
     setQuickPopup,
+    isModularMode,
+    toggleModularMode,
   } = useBuilder();
+
+  const decomposed = useMemo(() => decomposeScreens(screens), [screens]);
 
   // Primary Right Sidebar Mode: 'tree' | 'code' | 'inspector'
   const [activePanel, setActivePanel] = useState<'tree' | 'code' | 'inspector'>('code');
@@ -122,7 +135,7 @@ export const RightSidebar: React.FC = () => {
   const handleDownloadZip = async () => {
     setIsExporting(true);
     try {
-      const blob = await exportProjectZip(screens, targetLanguage, 'flex-ui-project', dataSources);
+      const blob = await exportProjectZip(screens, targetLanguage, 'flex-ui-project', dataSources, isModularMode);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -138,6 +151,178 @@ export const RightSidebar: React.FC = () => {
       setIsExporting(false);
     }
   };
+
+  // Active Code Content based on selected file view
+  const activeCodeContent = useMemo(() => {
+    // 1. Router View
+    if (selectedScreenView === 'router') {
+      if (targetLanguage === 'react') {
+        return {
+          code: generateReactMultiRouter(screens),
+          title: 'src/App.tsx (Router Setup)',
+          language: 'typescript',
+        };
+      }
+      if (targetLanguage === 'vue') {
+        return {
+          code: generateModularVueRouter(decomposed.screens),
+          title: 'src/router/index.ts (Vue Router)',
+          language: 'typescript',
+        };
+      }
+      if (targetLanguage === 'angular') {
+        return {
+          code: generateModularAngularRoutes(decomposed.screens),
+          title: 'src/app/app.routes.ts (Angular Routes)',
+          language: 'typescript',
+        };
+      }
+      return {
+        code: generateJS(components, dataSources),
+        title: 'script.js (Router & State)',
+        language: 'javascript',
+      };
+    }
+
+    // 2. Modular Component View (comp:PascalName)
+    if (selectedScreenView.startsWith('comp:')) {
+      const compName = selectedScreenView.replace('comp:', '');
+      const foundComp =
+        decomposed.allComponents.find((c) => c.pascalName === compName) || decomposed.allComponents[0];
+      if (foundComp) {
+        if (targetLanguage === 'react') {
+          return {
+            code: generateReactCode([foundComp.component], foundComp.pascalName, dataSources),
+            title: `src/components/${foundComp.pascalName}.tsx`,
+            language: 'typescript',
+          };
+        }
+        if (targetLanguage === 'vue') {
+          return {
+            code: generateVueCode([foundComp.component], foundComp.pascalName, dataSources),
+            title: `src/components/${foundComp.pascalName}.vue`,
+            language: 'vue',
+          };
+        }
+        if (targetLanguage === 'angular') {
+          return {
+            code: generateAngularCode(
+              [foundComp.component],
+              `${foundComp.pascalName}Component`,
+              dataSources
+            ),
+            title: `src/app/components/${foundComp.kebabName}/${foundComp.kebabName}.component.ts`,
+            language: 'typescript',
+          };
+        }
+        return {
+          code: generateHTML([foundComp.component], dataSources),
+          title: `components/${foundComp.kebabName}.html`,
+          language: 'html',
+        };
+      }
+    }
+
+    // 3. Screen View (page:ScreenId or 'active')
+    const targetScreenId = selectedScreenView.startsWith('page:')
+      ? selectedScreenView.replace('page:', '')
+      : activeScreen.id;
+    const foundScreen =
+      decomposed.screens.find((s) => s.id === targetScreenId) || decomposed.screens[0];
+    const rawScreen = screens.find((s) => s.id === targetScreenId) || activeScreen;
+
+    if (isModularMode && foundScreen) {
+      if (targetLanguage === 'react') {
+        return {
+          code: generateModularReactScreen(foundScreen, screens),
+          title: `src/pages/${foundScreen.screenPascalName}.tsx`,
+          language: 'typescript',
+        };
+      }
+      if (targetLanguage === 'vue') {
+        return {
+          code: generateModularVueScreen(foundScreen),
+          title: `src/views/${foundScreen.pascalName}View.vue`,
+          language: 'vue',
+        };
+      }
+      if (targetLanguage === 'angular') {
+        return {
+          code: generateModularAngularScreen(foundScreen),
+          title: `src/app/pages/${foundScreen.kebabName}/${foundScreen.kebabName}.component.ts`,
+          language: 'typescript',
+        };
+      }
+      return {
+        code: generateHTML(
+          foundScreen.components.map((c) => c.component),
+          dataSources
+        ),
+        title: `pages/${foundScreen.kebabName}.html`,
+        language: 'html',
+      };
+    }
+
+    // 4. Classic Single-Screen View
+    if (targetLanguage === 'react') {
+      return {
+        code: generateReactCode(
+          rawScreen.components,
+          `${(rawScreen.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Screen`,
+          dataSources
+        ),
+        title: `${rawScreen.name}Screen.tsx`,
+        language: 'typescript',
+      };
+    }
+    if (targetLanguage === 'vue') {
+      return {
+        code: generateVueCode(rawScreen.components, 'FlexApp', dataSources),
+        title: `${rawScreen.name}.vue`,
+        language: 'vue',
+      };
+    }
+    if (targetLanguage === 'angular') {
+      return {
+        code: generateAngularCode(
+          rawScreen.components,
+          `${(rawScreen.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Component`,
+          dataSources
+        ),
+        title: `${rawScreen.name}.component.ts`,
+        language: 'typescript',
+      };
+    }
+    if (codeSubTab === 'css') {
+      return {
+        code: generateCSS(rawScreen.components),
+        title: 'style.css',
+        language: 'css',
+      };
+    }
+    if (codeSubTab === 'js') {
+      return {
+        code: generateJS(rawScreen.components, dataSources),
+        title: 'script.js',
+        language: 'javascript',
+      };
+    }
+    return {
+      code: generateHTML(rawScreen.components, dataSources),
+      title: `${rawScreen.name}.html`,
+      language: 'html',
+    };
+  }, [
+    selectedScreenView,
+    targetLanguage,
+    isModularMode,
+    decomposed,
+    screens,
+    activeScreen,
+    components,
+    dataSources,
+    codeSubTab,
+  ]);
 
   return (
     <aside className="w-96 h-full bg-[#0d1322] border-l border-slate-800 flex flex-col select-none z-10">
@@ -209,26 +394,54 @@ export const RightSidebar: React.FC = () => {
             </button>
           </div>
 
-          {/* Screen Scope Selector */}
+          {/* Screen & Component Scope Selector */}
           <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/90 border-b border-slate-800 text-[11px]">
-            <span className="text-slate-400 font-medium">Screen View:</span>
+            <div className="flex items-center gap-1.5">
+              <Boxes size={12} className={isModularMode ? 'text-indigo-400' : 'text-slate-500'} />
+              <span className="text-slate-400 font-medium">File / View:</span>
+            </div>
             <select
               value={selectedScreenView}
               onChange={(e) => setSelectedScreenView(e.target.value)}
-              className="bg-slate-900 border border-slate-700/80 rounded px-2 py-0.5 text-xs text-blue-300 font-medium outline-none cursor-pointer max-w-[200px] truncate"
+              className="bg-slate-900 border border-slate-700/80 rounded px-2 py-0.5 text-xs text-blue-300 font-medium outline-none cursor-pointer max-w-[210px] truncate"
             >
-              <option value="active">Active: {activeScreen.name} ({activeScreen.route})</option>
-              {screens.length > 1 && <option value="router">App & Router ({screens.length} Screens)</option>}
-              {screens.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.route})
-                </option>
-              ))}
+              {isModularMode ? (
+                <>
+                  <optgroup label="🧭 Router & App">
+                    <option value="router">App Router ({targetLanguage === 'vue' ? 'router/index.ts' : targetLanguage === 'angular' ? 'app.routes.ts' : 'App.tsx'})</option>
+                  </optgroup>
+                  <optgroup label="📄 Screens / Page Views">
+                    <option value="active">Active: {activeScreen.name}Screen</option>
+                    {decomposed.screens.map((s) => (
+                      <option key={`page:${s.id}`} value={`page:${s.id}`}>
+                        {s.screenPascalName} ({s.route})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="🧩 Modular UI Components">
+                    {decomposed.allComponents.map((c) => (
+                      <option key={`comp:${c.pascalName}`} value={`comp:${c.pascalName}`}>
+                        {c.pascalName} (from {c.screenName})
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              ) : (
+                <>
+                  <option value="active">Active: {activeScreen.name} ({activeScreen.route})</option>
+                  {screens.length > 1 && <option value="router">App & Router ({screens.length} Screens)</option>}
+                  {screens.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.route})
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
-          {/* HTML / CSS / JS Sub-tabs when language is 'html' */}
-          {targetLanguage === 'html' ? (
+          {/* HTML / CSS / JS Sub-tabs when language is 'html' and not in modular file view */}
+          {targetLanguage === 'html' && !isModularMode ? (
             <div className="flex border-b border-slate-800 bg-slate-950 text-xs">
               <button
                 onClick={() => setCodeSubTab('html')}
@@ -259,102 +472,12 @@ export const RightSidebar: React.FC = () => {
 
           {/* Code Viewer */}
           <div className="flex-1 overflow-auto p-3">
-            {targetLanguage === 'react' && (
-              selectedScreenView === 'router' && screens.length > 1 ? (
-                <SyntaxHighlighter
-                  code={generateReactMultiRouter(screens)}
-                  language="typescript"
-                  title="App.tsx (React Router Setup)"
-                  maxHeight="calc(100vh - 240px)"
-                />
-              ) : (
-                <SyntaxHighlighter
-                  code={generateReactCode(
-                    selectedScreenView === 'active'
-                      ? components
-                      : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                    `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Screen`,
-                    dataSources
-                  )}
-                  language="typescript"
-                  title={`React (${activeScreen.name}Screen.tsx)`}
-                  maxHeight="calc(100vh - 240px)"
-                />
-              )
-            )}
-
-            {targetLanguage === 'vue' && (
-              <SyntaxHighlighter
-                code={generateVueCode(
-                  selectedScreenView === 'active'
-                    ? components
-                    : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                  'FlexApp',
-                  dataSources
-                )}
-                language="vue"
-                title={`Vue 3 (${activeScreen.name}.vue)`}
-                maxHeight="calc(100vh - 240px)"
-              />
-            )}
-
-            {targetLanguage === 'angular' && (
-              <SyntaxHighlighter
-                code={generateAngularCode(
-                  selectedScreenView === 'active'
-                    ? components
-                    : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                  `${(selectedScreenView === 'active' ? activeScreen.name : screens.find((s) => s.id === selectedScreenView)?.name || 'Screen').replace(/[^a-zA-Z0-9]/g, '')}Component`,
-                  dataSources
-                )}
-                language="typescript"
-                title={`Angular (${activeScreen.name}.component.ts)`}
-                maxHeight="calc(100vh - 240px)"
-              />
-            )}
-
-            {targetLanguage === 'html' && (
-              <div>
-                {codeSubTab === 'html' && (
-                  <SyntaxHighlighter
-                    code={generateHTML(
-                      selectedScreenView === 'active'
-                        ? components
-                        : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                      dataSources
-                    )}
-                    language="html"
-                    title={`${activeScreen.name}.html`}
-                    maxHeight="calc(100vh - 260px)"
-                  />
-                )}
-                {codeSubTab === 'css' && (
-                  <SyntaxHighlighter
-                    code={generateCSS(
-                      selectedScreenView === 'active'
-                        ? components
-                        : screens.find((s) => s.id === selectedScreenView)?.components || components
-                    )}
-                    language="css"
-                    title="style.css"
-                    maxHeight="calc(100vh - 260px)"
-                  />
-                )}
-                {codeSubTab === 'js' && (
-                  <SyntaxHighlighter
-                    code={generateJS(
-                      selectedScreenView === 'active'
-                        ? components
-                        : screens.find((s) => s.id === selectedScreenView)?.components || components,
-                      dataSources
-                    )}
-                    language="javascript"
-                    title="script.js"
-                    maxHeight="calc(100vh - 260px)"
-                  />
-                )}
-              </div>
-            )}
+            <SyntaxHighlighter
+              code={activeCodeContent.code}
+              language={activeCodeContent.language as any}
+              title={activeCodeContent.title}
+              maxHeight="calc(100vh - 240px)"
+            />
           </div>
         </div>
       )}

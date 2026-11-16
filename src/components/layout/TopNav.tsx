@@ -18,6 +18,7 @@ import {
   Code2,
   Check,
   Database,
+  Boxes,
 } from 'lucide-react';
 
 interface TopNavProps {
@@ -45,6 +46,8 @@ export const TopNav: React.FC<TopNavProps> = ({
     clearCanvas,
     dataSources,
     setIsDataSourcesModalOpen,
+    isModularMode,
+    toggleModularMode,
   } = useBuilder();
 
   return (
@@ -85,6 +88,27 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span>Data Sources</span>
           <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded-full font-mono font-semibold">
             {dataSources.length}
+          </span>
+        </button>
+
+        {/* Componentize UI (Modular Architecture & Route Config) */}
+        <button
+          onClick={toggleModularMode}
+          className={`ml-2 hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
+            isModularMode
+              ? 'bg-indigo-600/20 border-indigo-500/60 text-indigo-300 shadow-sm shadow-indigo-500/10'
+              : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-white'
+          }`}
+          title="Convert canvas controls into modular components (/components/) and screens into page views with configured routes"
+        >
+          <Boxes size={13} className={isModularMode ? 'text-indigo-400' : 'text-slate-400'} />
+          <span>Componentize</span>
+          <span
+            className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+              isModularMode ? 'bg-indigo-500/30 text-indigo-200' : 'bg-slate-800 text-slate-500'
+            }`}
+          >
+            {isModularMode ? 'ON' : 'OFF'}
           </span>
         </button>
       </div>

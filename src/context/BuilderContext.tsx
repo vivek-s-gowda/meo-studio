@@ -47,6 +47,11 @@ interface BuilderContextType {
   updateComponentDataBinding: (id: string, binding: ComponentDataBinding | undefined) => void;
   getDataSourceById: (id: string) => DataSource | undefined;
 
+  // Modular Component Architecture
+  isModularMode: boolean;
+  setIsModularMode: (val: boolean) => void;
+  toggleModularMode: () => void;
+
   // Actions
   addScreen: (name: string, route: string, starterTemplateId?: string) => string;
   updateScreen: (id: string, updates: Partial<Pick<Screen, 'name' | 'route'>>) => void;
@@ -445,6 +450,25 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>('react');
   const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop');
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
+
+  // Modular Component Architecture State
+  const [isModularMode, setIsModularMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('flexui_modular_mode');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+    return true; // Default to modular components mode
+  });
+
+  const toggleModularMode = useCallback(() => {
+    setIsModularMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('flexui_modular_mode', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  }, []);
 
   // History for Undo / Redo
   const [historyPast, setHistoryPast] = useState<FlexComponent[][]>([]);
@@ -1106,6 +1130,9 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTargetLanguage,
     setViewportMode,
     setIsPreviewMode,
+    isModularMode,
+    setIsModularMode,
+    toggleModularMode,
     setIsCreateComponentOpen,
     setContextMenu,
     setQuickPopup,

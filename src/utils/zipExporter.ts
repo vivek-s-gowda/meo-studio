@@ -4,21 +4,24 @@ import { generateReactCode, generateReactMultiRouter } from './codeGenerators/re
 import { generateVueCode } from './codeGenerators/vueGenerator';
 import { generateAngularCode } from './codeGenerators/angularGenerator';
 import { generateHTML, generateCSS, generateJS } from './codeGenerators/htmlCssJsGenerator';
-
-function toPascalCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9]/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
-}
+import {
+  decomposeScreens,
+  generateModularReactScreen,
+  generateModularVueScreen,
+  generateModularVueRouter,
+  generateModularVueApp,
+  generateModularAngularScreen,
+  generateModularAngularRoutes,
+  generateModularAngularApp,
+  toPascalCase,
+} from './componentDecomposer';
 
 export async function exportProjectZip(
   screensOrComponents: Screen[] | FlexComponent[],
   language: TargetLanguage,
   projectName = 'flex-ui-project',
-  dataSources: DataSource[] = []
+  dataSources: DataSource[] = [],
+  isModular = true
 ): Promise<Blob> {
   const zip = new JSZip();
 
@@ -40,21 +43,46 @@ export async function exportProjectZip(
       ];
 
   const primaryComponents = screens[0].components;
+  const decomposed = decomposeScreens(screens);
 
+  // Bundle mock data JSON
   if (dataSources && dataSources.length > 0) {
     zip.file('src/data/mockData.json', JSON.stringify(dataSources, null, 2));
   }
 
+  // ----------------------------------------------------
+  // REACT SCAFFOLDING
+  // ----------------------------------------------------
   if (language === 'react') {
-    // React Multi-Screen Routing Scaffolding
-    if (screens.length > 1) {
-      screens.forEach((s) => {
-        const compName = `${toPascalCase(s.name)}Screen`;
-        zip.file(`src/pages/${compName}.tsx`, generateReactCode(s.components, compName, dataSources));
+    if (isModular) {
+      // 1. Export extracted modular components to src/components/
+      decomposed.allComponents.forEach((c) => {
+        zip.file(
+          `src/components/${c.pascalName}.tsx`,
+          generateReactCode([c.component], c.pascalName, dataSources)
+        );
       });
+
+      // 2. Export screen components to src/pages/
+      decomposed.screens.forEach((s) => {
+        zip.file(
+          `src/pages/${s.screenPascalName}.tsx`,
+          generateModularReactScreen(s, screens)
+        );
+      });
+
+      // 3. Export App.tsx with Router
       zip.file('src/App.tsx', generateReactMultiRouter(screens));
     } else {
-      zip.file('src/App.tsx', generateReactCode(primaryComponents, 'App', dataSources));
+      if (screens.length > 1) {
+        screens.forEach((s) => {
+          const compName = `${toPascalCase(s.name)}Screen`;
+          zip.file(`src/pages/${compName}.tsx`, generateReactCode(s.components, compName, dataSources));
+        });
+        zip.file('src/App.tsx', generateReactMultiRouter(screens));
+      } else {
+        zip.file('src/App.tsx', generateReactCode(primaryComponents, 'App', dataSources));
+      }
     }
 
     zip.file(
@@ -148,21 +176,56 @@ export default defineConfig({
 </html>`
     );
   } else if (language === 'vue') {
-    // Vue 3 Vite Scaffolding
-    if (screens.length > 1) {
-      screens.forEach((s) => {
-        const viewName = `${toPascalCase(s.name)}View`;
-        zip.file(`src/views/${viewName}.vue`, generateVueCode(s.components, viewName, dataSources));
+    // ----------------------------------------------------
+    // VUE 3 SCAFFOLDING
+    // ----------------------------------------------------
+    if (isModular) {
+      // 1. Export extracted modular components to src/components/
+      decomposed.allComponents.forEach((c) => {
+        zip.file(
+          `src/components/${c.pascalName}.vue`,
+          generateVueCode([c.component], c.pascalName, dataSources)
+        );
       });
-    }
-    const appVue = generateVueCode(primaryComponents, 'App', dataSources);
-    zip.file('src/App.vue', appVue);
-    zip.file(
-      'src/main.ts',
-      `import { createApp } from 'vue';
+
+      // 2. Export views to src/views/
+      decomposed.screens.forEach((s) => {
+        zip.file(`src/views/${s.pascalName}View.vue`, generateModularVueScreen(s));
+      });
+
+      // 3. Export router configuration
+      zip.file('src/router/index.ts', generateModularVueRouter(decomposed.screens));
+
+      // 4. Export App.vue with router-view
+      zip.file('src/App.vue', generateModularVueApp(decomposed.screens));
+
+      zip.file(
+        'src/main.ts',
+        `import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+
+const app = createApp(App);
+app.use(router);
+app.mount('#app');`
+      );
+    } else {
+      if (screens.length > 1) {
+        screens.forEach((s) => {
+          const viewName = `${toPascalCase(s.name)}View`;
+          zip.file(`src/views/${viewName}.vue`, generateVueCode(s.components, viewName, dataSources));
+        });
+      }
+      const appVue = generateVueCode(primaryComponents, 'App', dataSources);
+      zip.file('src/App.vue', appVue);
+      zip.file(
+        'src/main.ts',
+        `import { createApp } from 'vue';
 import App from './App.vue';
 createApp(App).mount('#app');`
-    );
+      );
+    }
+
     zip.file(
       'package.json',
       JSON.stringify(
@@ -176,6 +239,7 @@ createApp(App).mount('#app');`
           },
           dependencies: {
             vue: '^3.5.13',
+            'vue-router': '^4.5.0',
           },
           devDependencies: {
             '@vitejs/plugin-vue': '^5.2.1',
@@ -213,25 +277,73 @@ export default defineConfig({
 </html>`
     );
   } else if (language === 'angular') {
-    // Angular 17+ Scaffolding
-    if (screens.length > 1) {
-      screens.forEach((s) => {
-        const compName = `${toPascalCase(s.name)}Component`;
+    // ----------------------------------------------------
+    // ANGULAR 17+ SCAFFOLDING
+    // ----------------------------------------------------
+    if (isModular) {
+      // 1. Export modular components to src/app/components/<kebab>/
+      decomposed.allComponents.forEach((c) => {
         zip.file(
-          `src/app/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.component.ts`,
-          generateAngularCode(s.components, compName, dataSources)
+          `src/app/components/${c.kebabName}/${c.kebabName}.component.ts`,
+          generateAngularCode([c.component], `${c.pascalName}Component`, dataSources)
         );
       });
-    }
-    const appComp = generateAngularCode(primaryComponents, 'FlexAppComponent', dataSources);
-    zip.file('src/app/app.component.ts', appComp);
-    zip.file(
-      'src/main.ts',
-      `import { bootstrapApplication } from '@angular/platform-browser';
+
+      // 2. Export screen pages to src/app/pages/<kebab>/
+      decomposed.screens.forEach((s) => {
+        zip.file(
+          `src/app/pages/${s.kebabName}/${s.kebabName}.component.ts`,
+          generateModularAngularScreen(s)
+        );
+      });
+
+      // 3. Export router configuration
+      zip.file('src/app/app.routes.ts', generateModularAngularRoutes(decomposed.screens));
+
+      // 4. Export app.config.ts
+      zip.file(
+        'src/app/app.config.ts',
+        `import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes)],
+};`
+      );
+
+      // 5. Export app.component.ts with router-outlet
+      zip.file('src/app/app.component.ts', generateModularAngularApp(decomposed.screens));
+
+      zip.file(
+        'src/main.ts',
+        `import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));`
+      );
+    } else {
+      if (screens.length > 1) {
+        screens.forEach((s) => {
+          const compName = `${toPascalCase(s.name)}Component`;
+          zip.file(
+            `src/app/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.component.ts`,
+            generateAngularCode(s.components, compName, dataSources)
+          );
+        });
+      }
+      const appComp = generateAngularCode(primaryComponents, 'FlexAppComponent', dataSources);
+      zip.file('src/app/app.component.ts', appComp);
+      zip.file(
+        'src/main.ts',
+        `import { bootstrapApplication } from '@angular/platform-browser';
 import { FlexAppComponent } from './app/app.component';
 
 bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
-    );
+      );
+    }
+
     zip.file(
       'package.json',
       JSON.stringify(
@@ -247,6 +359,7 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
             '@angular/core': '^19.0.0',
             '@angular/forms': '^19.0.0',
             '@angular/platform-browser': '^19.0.0',
+            '@angular/router': '^19.0.0',
             rxjs: '~7.8.0',
             'zone.js': '~0.15.0',
           },
@@ -260,17 +373,34 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
       )
     );
   } else {
-    // Plain HTML / CSS / JS (Multi-page or single page)
-    if (screens.length > 1) {
-      screens.forEach((s, idx) => {
+    // ----------------------------------------------------
+    // PLAIN HTML / CSS / JS
+    // ----------------------------------------------------
+    if (isModular) {
+      // Export components to components/
+      decomposed.allComponents.forEach((c) => {
+        zip.file(`components/${c.kebabName}.html`, generateHTML([c.component], dataSources));
+      });
+      // Export pages
+      decomposed.screens.forEach((s, idx) => {
         const fileName =
           idx === 0 || s.route === '/'
             ? 'index.html'
-            : `${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.html`;
-        zip.file(fileName, generateHTML(s.components, dataSources));
+            : `pages/${s.kebabName}.html`;
+        zip.file(fileName, generateHTML(s.components.map((c) => c.component), dataSources));
       });
     } else {
-      zip.file('index.html', generateHTML(primaryComponents, dataSources));
+      if (screens.length > 1) {
+        screens.forEach((s, idx) => {
+          const fileName =
+            idx === 0 || s.route === '/'
+              ? 'index.html'
+              : `${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.html`;
+          zip.file(fileName, generateHTML(s.components, dataSources));
+        });
+      } else {
+        zip.file('index.html', generateHTML(primaryComponents, dataSources));
+      }
     }
     zip.file('style.css', generateCSS(primaryComponents));
     zip.file('script.js', generateJS(primaryComponents, dataSources));
@@ -281,9 +411,15 @@ bootstrapApplication(FlexAppComponent).catch((err) => console.error(err));`
     'README.md',
     `# ${projectName}
 
-Exported from **FlexUI** Studio for **${language.toUpperCase()}**.
+Exported from **FlexUI** Studio with **Modular Component Architecture**.
 
-## Getting Started
+### Architecture Overview:
+- 📁 \`src/components/\`: Reusable UI components extracted from canvas elements
+- 📁 \`src/pages/\` (or \`src/views/\`): Screen views assembling the modular components
+- 🧭 \`App.tsx\` (or \`router/index.ts\` / \`app.routes.ts\`): Application Router with full screen route configuration
+- 📦 \`src/data/mockData.json\`: Data sources and API models
+
+### Quickstart:
 \`\`\`bash
 # 1. Install dependencies
 npm install
