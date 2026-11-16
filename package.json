@@ -2,6 +2,8 @@
   "name": "flex-ui",
   "private": true,
   "version": "1.0.0",
+  "description": "FlexUI Studio - Interactive Visual UI Development & Scaffolding Studio",
+  "author": "FlexUI Team <team@flexui.dev>",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -21,6 +23,7 @@
   "build": {
     "appId": "com.flexui.studio",
     "productName": "FlexUI Studio",
+    "electronVersion": "33.2.1",
     "copyright": "Copyright © 2026 FlexUI Team",
     "directories": {
       "output": "dist-electron"
@@ -67,6 +70,8 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
