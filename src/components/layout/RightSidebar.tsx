@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useBuilder } from '../../context/BuilderContext';
-import { SyntaxHighlighter } from '../ui/SyntaxHighlighter';
+import { CodeEditor } from '../ui/CodeEditor';
+import { parseCodeToComponents } from '../../utils/codeParser';
 import { generateHTML, generateCSS, generateJS } from '../../utils/codeGenerators/htmlCssJsGenerator';
 import { generateReactCode, generateReactMultiRouter } from '../../utils/codeGenerators/reactGenerator';
 import { generateVueCode } from '../../utils/codeGenerators/vueGenerator';
@@ -47,6 +48,8 @@ export const RightSidebar: React.FC = () => {
     selectedComponent,
     updateComponentStyles,
     updateComponentProps,
+    setComponents,
+    updateScreenComponents,
     dataSources,
     setQuickPopup,
     isModularMode,
@@ -62,6 +65,68 @@ export const RightSidebar: React.FC = () => {
   const [codeSubTab, setCodeSubTab] = useState<'html' | 'css' | 'js' | 'all'>('html');
   const [selectedScreenView, setSelectedScreenView] = useState<'active' | 'router' | string>('active');
   const [isExporting, setIsExporting] = useState(false);
+
+  // Bi-directional Code -> Canvas Synchronization Handler
+  const handleApplyToCanvas = useCallback(
+    (newCode: string): { success: boolean; error?: string } => {
+      // 1. Router View is structural, cannot map directly to single canvas component list
+      if (selectedScreenView === 'router') {
+        return { success: false, error: 'App Router is generated from screen routes.' };
+      }
+
+      // 2. Editing a modular component
+      if (selectedScreenView.startsWith('comp:')) {
+        const compName = selectedScreenView.replace('comp:', '');
+        const foundComp = decomposed.allComponents.find((c) => c.pascalName === compName);
+        if (!foundComp) {
+          return { success: false, error: `Component ${compName} not found` };
+        }
+        const parseRes = parseCodeToComponents(newCode, [foundComp.component], targetLanguage);
+        if (parseRes.success && parseRes.components.length > 0) {
+          const updated = parseRes.components[0];
+          updateComponentProps(foundComp.component.id, updated.props);
+          updateComponentStyles(foundComp.component.id, updated.styles);
+          return { success: true };
+        }
+        return { success: false, error: parseRes.error || 'Failed to parse component' };
+      }
+
+      // 3. Editing a specific screen page or active screen
+      const targetScreenId = selectedScreenView.startsWith('page:')
+        ? selectedScreenView.replace('page:', '')
+        : activeScreen.id;
+      const targetScreen = screens.find((s) => s.id === targetScreenId) || activeScreen;
+
+      const parseRes = parseCodeToComponents(
+        newCode,
+        targetScreen.components,
+        targetLanguage
+      );
+
+      if (parseRes.success) {
+        if (targetScreenId === activeScreen.id) {
+          setComponents(parseRes.components);
+        } else {
+          updateScreenComponents(targetScreenId, parseRes.components);
+        }
+        return { success: true };
+      }
+
+      return { success: false, error: parseRes.error || 'Parsing error' };
+    },
+    [
+      selectedScreenView,
+      decomposed,
+      targetLanguage,
+      screens,
+      activeScreen,
+      components,
+      setComponents,
+      updateScreenComponents,
+      updateComponentProps,
+      updateComponentStyles,
+    ]
+  );
 
   // Tree View node component
   const renderTreeNode = (comp: FlexComponent, depth = 0) => {
@@ -407,10 +472,7 @@ export const RightSidebar: React.FC = () => {
             >
               {isModularMode ? (
                 <>
-                  <optgroup label="🧭 Router & App">
-                    <option value="router">App Router ({targetLanguage === 'vue' ? 'router/index.ts' : targetLanguage === 'angular' ? 'app.routes.ts' : 'App.tsx'})</option>
-                  </optgroup>
-                  <optgroup label="📄 Screens / Page Views">
+                  <optgroup label="📄 Screens / Page Views (Editable)">
                     <option value="active">Active: {activeScreen.name}Screen</option>
                     {decomposed.screens.map((s) => (
                       <option key={`page:${s.id}`} value={`page:${s.id}`}>
@@ -418,23 +480,26 @@ export const RightSidebar: React.FC = () => {
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="🧩 Modular UI Components">
+                  <optgroup label="🧩 Modular UI Components (Editable)">
                     {decomposed.allComponents.map((c) => (
                       <option key={`comp:${c.pascalName}`} value={`comp:${c.pascalName}`}>
                         {c.pascalName} (from {c.screenName})
                       </option>
                     ))}
                   </optgroup>
+                  <optgroup label="🧭 App & Router Setup">
+                    <option value="router">App Router ({targetLanguage === 'vue' ? 'router/index.ts' : targetLanguage === 'angular' ? 'app.routes.ts' : 'App.tsx'})</option>
+                  </optgroup>
                 </>
               ) : (
                 <>
-                  <option value="active">Active: {activeScreen.name} ({activeScreen.route})</option>
-                  {screens.length > 1 && <option value="router">App & Router ({screens.length} Screens)</option>}
+                  <option value="active">Active Screen: {activeScreen.name} ({activeScreen.route})</option>
                   {screens.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.route})
                     </option>
                   ))}
+                  {screens.length > 1 && <option value="router">App & Router ({screens.length} Screens)</option>}
                 </>
               )}
             </select>
@@ -470,13 +535,15 @@ export const RightSidebar: React.FC = () => {
             </div>
           ) : null}
 
-          {/* Code Viewer */}
-          <div className="flex-1 overflow-auto p-3">
-            <SyntaxHighlighter
-              code={activeCodeContent.code}
+          {/* Interactive Code Editor with Live Canvas Sync */}
+          <div className="flex-1 overflow-hidden p-2.5 flex flex-col min-h-0">
+            <CodeEditor
+              key={`${activeCodeContent.title}-${targetLanguage}-${selectedScreenView}-${codeSubTab}`}
+              initialCode={activeCodeContent.code}
               language={activeCodeContent.language as any}
               title={activeCodeContent.title}
-              maxHeight="calc(100vh - 240px)"
+              maxHeight="calc(100vh - 230px)"
+              onApplyToCanvas={handleApplyToCanvas}
             />
           </div>
         </div>

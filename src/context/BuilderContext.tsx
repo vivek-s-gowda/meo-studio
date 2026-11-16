@@ -86,6 +86,8 @@ interface BuilderContextType {
   wrapInContainer: (id: string) => void;
   clearCanvas: () => void;
   loadTemplate: (templateId: string) => void;
+  setComponents: (action: React.SetStateAction<FlexComponent[]>) => void;
+  updateScreenComponents: (screenId: string, components: FlexComponent[]) => void;
   undo: () => void;
   redo: () => void;
 
@@ -169,6 +171,12 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     },
     [activeScreenId]
   );
+
+  const updateScreenComponents = useCallback((screenId: string, newComps: FlexComponent[]) => {
+    setScreens((prev) =>
+      prev.map((s) => (s.id === screenId ? { ...s, components: newComps } : s))
+    );
+  }, []);
 
   const setActiveScreenId = useCallback((id: string) => {
     setActiveScreenIdState(id);
@@ -1163,6 +1171,8 @@ export const BuilderProvider: React.FC<{ children: React.ReactNode }> = ({ child
     wrapInContainer,
     clearCanvas,
     loadTemplate,
+    setComponents,
+    updateScreenComponents,
     undo,
     redo,
     findComponentById,

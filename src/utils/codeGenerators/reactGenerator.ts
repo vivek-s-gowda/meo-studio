@@ -28,36 +28,19 @@ export function generateReactMultiRouter(screens: Screen[]): string {
     .join('\n');
 
   const routes = screens
-    .map((s) => `          <Route path="${s.route}" element={<${toPascalCase(s.name)}Screen />} />`)
-    .join('\n');
-
-  const navLinks = screens
-    .map((s) => `            <Link to="${s.route}" className="hover:text-blue-400 transition-colors">${s.name}</Link>`)
+    .map((s) => `        <Route path="${s.route}" element={<${toPascalCase(s.name)}Screen />} />`)
     .join('\n');
 
   return `import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 ${imports}
 
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Top Application Navigation */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between text-xs font-medium">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-          <span className="font-bold text-white text-sm">FlexUI App</span>
-        </div>
-        <nav className="flex items-center gap-4 text-slate-300">
-${navLinks}
-        </nav>
-      </header>
-
-      <main className="p-6 max-w-5xl mx-auto">
-        <Routes>
+      <Routes>
 ${routes}
-        </Routes>
-      </main>
+      </Routes>
     </BrowserRouter>
   );
 }
@@ -183,11 +166,11 @@ export function generateReactCode(
           .join('\n');
 
         const colCells = (comp.props.columns || [{ key: 'name', label: 'Name' }, { key: 'status', label: 'Status' }])
-          .map((c: any) => `${spaces}            <td className="py-2.5 px-4 text-slate-300">{row.${c.key}}</td>`)
+          .map((c: any) => `${spaces}            <td className="py-2.5 px-4 text-slate-400">{row.${c.key}}</td>`)
           .join('\n');
 
         return `${spaces}{/* Data Table (${comp.props.title || 'Data Table'}) */}
-${spaces}<div${styleAttr} className="w-full flex flex-col overflow-hidden text-xs bg-slate-900 border border-slate-700/80 rounded-xl">
+${spaces}<div id="${comp.id}"${styleAttr} className="w-full flex flex-col overflow-hidden text-xs bg-slate-900 border border-slate-700/80 rounded-xl">
 ${spaces}  <div className="px-4 py-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
 ${spaces}    <span className="font-bold text-white text-sm">{${JSON.stringify(comp.props.title || 'Data Directory')}}</span>
 ${spaces}    <input
@@ -225,9 +208,9 @@ ${spaces}</div>`;
         const labelExpr = toJSXToken(comp.props.label, 'Button');
         if (comp.props.targetRoute) {
           usesRouter = true;
-          return `${spaces}<button${styleAttr} onClick={() => navigate('${comp.props.targetRoute}')} className="transition-all active:scale-95">\n${spaces}  {${labelExpr}}\n${spaces}</button>`;
+          return `${spaces}<button id="${comp.id}"${styleAttr} onClick={() => navigate('${comp.props.targetRoute}')} className="transition-all active:scale-95">\n${spaces}  {${labelExpr}}\n${spaces}</button>`;
         }
-        return `${spaces}<button${styleAttr}${eventString} className="transition-all active:scale-95">\n${spaces}  {${labelExpr}}\n${spaces}</button>`;
+        return `${spaces}<button id="${comp.id}"${styleAttr}${eventString} className="transition-all active:scale-95">\n${spaces}  {${labelExpr}}\n${spaces}</button>`;
       }
 
       case 'input': {
@@ -235,36 +218,36 @@ ${spaces}</div>`;
         stateHooks.add(`  const [${stateKey}, set${stateKey.charAt(0).toUpperCase() + stateKey.slice(1)}] = useState('');`);
         const labelExpr = toJSXToken(comp.props.label);
         const placeholderExpr = comp.props.placeholder ? toJSXToken(comp.props.placeholder) : '""';
-        return `${spaces}<div className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-300">{${labelExpr}}</label>}\n${spaces}  <input\n${spaces}    type="${comp.props.inputType || 'text'}"\n${spaces}    placeholder={${placeholderExpr}}\n${spaces}    value={${stateKey}}\n${spaces}    onChange={(e) => set${stateKey.charAt(0).toUpperCase() + stateKey.slice(1)}(e.target.value)}\n${spaces}   ${styleAttr}${eventString}\n${spaces}    className="outline-none transition-colors focus:ring-2 focus:ring-blue-500"\n${spaces}  />\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}" className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-400">{${labelExpr}}</label>}\n${spaces}  <input\n${spaces}    type="${comp.props.inputType || 'text'}"\n${spaces}    placeholder={${placeholderExpr}}\n${spaces}    value={${stateKey}}\n${spaces}    onChange={(e) => set${stateKey.charAt(0).toUpperCase() + stateKey.slice(1)}(e.target.value)}\n${spaces}   ${styleAttr}${eventString}\n${spaces}    className="outline-none transition-colors focus:ring-2 focus:ring-blue-500"\n${spaces}  />\n${spaces}</div>`;
       }
 
       case 'textarea': {
         const labelExpr = toJSXToken(comp.props.label);
         const placeholderExpr = comp.props.placeholder ? toJSXToken(comp.props.placeholder) : '""';
-        return `${spaces}<div className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-300">{${labelExpr}}</label>}\n${spaces}  <textarea\n${spaces}    rows={${comp.props.rows || 3}}\n${spaces}    placeholder={${placeholderExpr}}\n${spaces}   ${styleAttr}${eventString}\n${spaces}    className="outline-none transition-colors focus:ring-2 focus:ring-blue-500"\n${spaces}  />\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}" className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-400">{${labelExpr}}</label>}\n${spaces}  <textarea\n${spaces}    rows={${comp.props.rows || 3}}\n${spaces}    placeholder={${placeholderExpr}}\n${spaces}   ${styleAttr}${eventString}\n${spaces}    className="outline-none transition-colors focus:ring-2 focus:ring-blue-500"\n${spaces}  />\n${spaces}</div>`;
       }
 
       case 'checkbox': {
         const labelExpr = toJSXToken(comp.props.label);
-        return `${spaces}<label${styleAttr} className="cursor-pointer select-none">\n${spaces}  <input type="checkbox" defaultChecked={${Boolean(comp.props.checked)}}${eventString} className="rounded accent-blue-600" />\n${spaces}  <span>{${labelExpr}}</span>\n${spaces}</label>`;
+        return `${spaces}<label id="${comp.id}"${styleAttr} className="cursor-pointer select-none">\n${spaces}  <input type="checkbox" defaultChecked={${Boolean(comp.props.checked)}}${eventString} className="rounded accent-blue-600" />\n${spaces}  <span>{${labelExpr}}</span>\n${spaces}</label>`;
       }
 
       case 'switch': {
         const switchState = `switch_${comp.id.replace(/-/g, '_')}`;
         stateHooks.add(`  const [${switchState}, set${switchState.charAt(0).toUpperCase() + switchState.slice(1)}] = useState(${Boolean(comp.props.checked)});`);
         const labelExpr = toJSXToken(comp.props.label, 'Toggle');
-        return `${spaces}<div${styleAttr} className="flex items-center justify-between">\n${spaces}  <span>{${labelExpr}}</span>\n${spaces}  <button\n${spaces}    type="button"\n${spaces}    onClick={() => set${switchState.charAt(0).toUpperCase() + switchState.slice(1)}(!${switchState})}\n${spaces}    className={\`relative inline-flex h-6 w-11 items-center rounded-full transition-colors \${${switchState} ? 'bg-blue-600' : 'bg-slate-700'}\`}\n${spaces}  >\n${spaces}    <span className={\`inline-block h-4 w-4 transform rounded-full bg-white transition-transform \${${switchState} ? 'translate-x-6' : 'translate-x-1'}\`} />\n${spaces}  </button>\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr} className="flex items-center justify-between">\n${spaces}  <span>{${labelExpr}}</span>\n${spaces}  <button\n${spaces}    type="button"\n${spaces}    onClick={() => set${switchState.charAt(0).toUpperCase() + switchState.slice(1)}(!${switchState})}\n${spaces}    className={\`relative inline-flex h-6 w-11 items-center rounded-full transition-colors \${${switchState} ? 'bg-blue-600' : 'bg-slate-700'}\`}\n${spaces}  >\n${spaces}    <span className={\`inline-block h-4 w-4 transform rounded-full bg-white transition-transform \${${switchState} ? 'translate-x-6' : 'translate-x-1'}\`} />\n${spaces}  </button>\n${spaces}</div>`;
       }
 
       case 'select': {
         const labelExpr = toJSXToken(comp.props.label);
         const opts = (comp.props.options || []).map((o: string) => `${spaces}    <option value="${o}">{${JSON.stringify(o)}}</option>`).join('\n');
-        return `${spaces}<div className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-300">{${labelExpr}}</label>}\n${spaces}  <select${styleAttr}${eventString} className="outline-none">\n${opts}\n${spaces}  </select>\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}" className="flex flex-col gap-1 w-full">\n${spaces}  {${labelExpr} && <label className="text-xs font-medium text-slate-400">{${labelExpr}}</label>}\n${spaces}  <select${styleAttr}${eventString} className="outline-none">\n${opts}\n${spaces}  </select>\n${spaces}</div>`;
       }
 
       case 'slider': {
         const labelExpr = toJSXToken(comp.props.label, 'Slider');
-        return `${spaces}<div${styleAttr} className="flex flex-col gap-1 w-full">\n${spaces}  <div className="flex justify-between text-xs text-slate-300">\n${spaces}    <span>{${labelExpr}}</span>\n${spaces}  </div>\n${spaces}  <input type="range" min={${comp.props.min || 0}} max={${comp.props.max || 100}} defaultValue={${comp.props.value || 50}} className="accent-blue-500" />\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr} className="flex flex-col gap-1 w-full">\n${spaces}  <div className="flex justify-between text-xs text-slate-400">\n${spaces}    <span>{${labelExpr}}</span>\n${spaces}  </div>\n${spaces}  <input type="range" min={${comp.props.min || 0}} max={${comp.props.max || 100}} defaultValue={${comp.props.value || 50}} className="accent-blue-500" />\n${spaces}</div>`;
       }
 
       case 'card': {
@@ -275,13 +258,13 @@ ${spaces}</div>`;
           const childrenJSX = hasChildren
             ? comp.children!.map((c) => renderJSX(c, indent + 4)).join('\n')
             : '';
-          return `${spaces}{/* Repeat Card Loop */}\n${spaces}{${dsKey}.map((item: any, idx: number) => (\n${spaces}  <div key={item.id || idx}${styleAttr} className="shadow-lg">\n${titleExpr ? `${spaces}    <div className="border-b border-slate-700/60 pb-3 mb-2">\n${spaces}      <h3 className="text-lg font-semibold text-white">{${titleExpr}}</h3>\n${subtitleExpr ? `${spaces}      <p className="text-xs text-slate-400 mt-0.5">{${subtitleExpr}}</p>\n` : ''}${spaces}    </div>\n` : ''}${childrenJSX ? `${childrenJSX}\n` : ''}${spaces}  </div>\n${spaces}))}`;
+          return `${spaces}{/* Repeat Card Loop */}\n${spaces}{${dsKey}.map((item: any, idx: number) => (\n${spaces}  <div key={item.id || idx} id="${comp.id}"${styleAttr} className="shadow-lg">\n${titleExpr ? `${spaces}    <div className="border-b border-slate-700/60 pb-3 mb-2">\n${spaces}      <h3 className="text-lg font-semibold text-white">{${titleExpr}}</h3>\n${subtitleExpr ? `${spaces}      <p className="text-xs text-slate-400 mt-0.5">{${subtitleExpr}}</p>\n` : ''}${spaces}    </div>\n` : ''}${childrenJSX ? `${childrenJSX}\n` : ''}${spaces}  </div>\n${spaces}))}`;
         }
 
         const childrenJSX = hasChildren
           ? comp.children!.map((c) => renderJSX(c, indent + 2)).join('\n')
           : '';
-        return `${spaces}<div${styleAttr} className="shadow-lg">\n${titleExpr ? `${spaces}  <div className="border-b border-slate-700/60 pb-3 mb-2">\n${spaces}    <h3 className="text-lg font-semibold text-white">{${titleExpr}}</h3>\n${subtitleExpr ? `${spaces}    <p className="text-xs text-slate-400 mt-0.5">{${subtitleExpr}}</p>\n` : ''}${spaces}  </div>\n` : ''}${childrenJSX ? `${childrenJSX}\n` : ''}${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr} className="shadow-lg">\n${titleExpr ? `${spaces}  <div className="border-b border-slate-700/60 pb-3 mb-2">\n${spaces}    <h3 className="text-lg font-semibold text-white">{${titleExpr}}</h3>\n${subtitleExpr ? `${spaces}    <p className="text-xs text-slate-400 mt-0.5">{${subtitleExpr}}</p>\n` : ''}${spaces}  </div>\n` : ''}${childrenJSX ? `${childrenJSX}\n` : ''}${spaces}</div>`;
       }
 
       case 'container':
@@ -290,57 +273,57 @@ ${spaces}</div>`;
           const childrenJSX = hasChildren
             ? comp.children!.map((c) => renderJSX(c, indent + 4)).join('\n')
             : '';
-          return `${spaces}<div${styleAttr}>\n${spaces}  {${dsKey}.map((item: any, idx: number) => (\n${spaces}    <React.Fragment key={item.id || idx}>\n${childrenJSX}\n${spaces}    </React.Fragment>\n${spaces}  ))}\n${spaces}</div>`;
+          return `${spaces}<div id="${comp.id}"${styleAttr}>\n${spaces}  {${dsKey}.map((item: any, idx: number) => (\n${spaces}    <React.Fragment key={item.id || idx}>\n${childrenJSX}\n${spaces}    </React.Fragment>\n${spaces}  ))}\n${spaces}</div>`;
         }
 
         const childrenJSX = hasChildren
           ? '\n' + comp.children!.map((c) => renderJSX(c, indent + 2)).join('\n') + `\n${spaces}`
           : '';
-        return `${spaces}<div${styleAttr}>${childrenJSX}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr}>${childrenJSX}</div>`;
       }
 
       case 'heading': {
         const Tag = comp.props.level || 'h2';
         const textExpr = toJSXToken(comp.props.text, 'Heading');
-        return `${spaces}<${Tag}${styleAttr}>{${textExpr}}</${Tag}>`;
+        return `${spaces}<${Tag} id="${comp.id}"${styleAttr}>{${textExpr}}</${Tag}>`;
       }
 
       case 'paragraph': {
         const textExpr = toJSXToken(comp.props.text, '');
-        return `${spaces}<p${styleAttr}>{${textExpr}}</p>`;
+        return `${spaces}<p id="${comp.id}"${styleAttr}>{${textExpr}}</p>`;
       }
 
       case 'badge': {
         const textExpr = toJSXToken(comp.props.text, 'Badge');
-        return `${spaces}<span${styleAttr}>{${textExpr}}</span>`;
+        return `${spaces}<span id="${comp.id}"${styleAttr}>{${textExpr}}</span>`;
       }
 
       case 'alert': {
         const titleExpr = toJSXToken(comp.props.title, 'Notice');
         const messageExpr = toJSXToken(comp.props.message, '');
-        return `${spaces}<div${styleAttr}>\n${spaces}  <div className="font-semibold">{${titleExpr}}</div>\n${spaces}  <p className="text-xs mt-0.5">{${messageExpr}}</p>\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr}>\n${spaces}  <div className="font-semibold">{${titleExpr}}</div>\n${spaces}  <p className="text-xs mt-0.5">{${messageExpr}}</p>\n${spaces}</div>`;
       }
 
       case 'avatar': {
         const srcExpr = toJSXToken(comp.props.src, '');
         const nameExpr = toJSXToken(comp.props.name, 'Avatar');
-        return `${spaces}<img src={${srcExpr}} alt={${nameExpr}}${styleAttr} className="object-cover" />`;
+        return `${spaces}<img id="${comp.id}" src={${srcExpr}} alt={${nameExpr}}${styleAttr} className="object-cover" />`;
       }
 
       case 'divider': {
-        return `${spaces}<hr${styleAttr} />`;
+        return `${spaces}<hr id="${comp.id}"${styleAttr} />`;
       }
 
       case 'progress': {
-        return `${spaces}<div${styleAttr} className="overflow-hidden">\n${spaces}  <div className="h-full bg-blue-500 rounded-full" style={{ width: '${comp.props.value || 50}%' }} />\n${spaces}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr} className="overflow-hidden">\n${spaces}  <div className="h-full bg-blue-500 rounded-full" style={{ width: '${comp.props.value || 50}%' }} />\n${spaces}</div>`;
       }
 
       default: {
         if (hasChildren) {
           const childrenJSX = comp.children!.map((c) => renderJSX(c, indent + 2)).join('\n');
-          return `${spaces}<div${styleAttr}${eventString}>\n${comp.props.title ? `${spaces}  <h3 className="font-bold">{${toJSXToken(comp.props.title)}}</h3>\n` : ''}${childrenJSX}\n${spaces}</div>`;
+          return `${spaces}<div id="${comp.id}"${styleAttr}${eventString}>\n${comp.props.title ? `${spaces}  <h3 className="font-bold">{${toJSXToken(comp.props.title)}}</h3>\n` : ''}${childrenJSX}\n${spaces}</div>`;
         }
-        return `${spaces}<div${styleAttr}${eventString}>{${toJSXToken(comp.props.label || comp.props.title || comp.name)}}</div>`;
+        return `${spaces}<div id="${comp.id}"${styleAttr}${eventString}>{${toJSXToken(comp.props.label || comp.props.title || comp.name)}}</div>`;
       }
     }
   }

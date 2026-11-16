@@ -126,7 +126,7 @@ export const PRESET_DATA_SOURCES: DataSource[] = [
         rating: 4.8,
         stock: 45,
         badge: 'Best Seller',
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=80',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80',
       },
       {
         id: 102,
@@ -136,7 +136,7 @@ export const PRESET_DATA_SOURCES: DataSource[] = [
         rating: 4.9,
         stock: 28,
         badge: 'New',
-        image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300&auto=format&fit=crop&q=80',
+        image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80',
       },
       {
         id: 103,
@@ -146,7 +146,7 @@ export const PRESET_DATA_SOURCES: DataSource[] = [
         rating: 4.7,
         stock: 14,
         badge: 'Sale',
-        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=300&auto=format&fit=crop&q=80',
+        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80',
       },
       {
         id: 104,
@@ -156,7 +156,7 @@ export const PRESET_DATA_SOURCES: DataSource[] = [
         rating: 4.6,
         stock: 82,
         badge: 'Trending',
-        image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&auto=format&fit=crop&q=80',
+        image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80',
       },
     ],
     schema: [

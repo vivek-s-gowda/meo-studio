@@ -196,27 +196,13 @@ export default router;
 `;
 }
 
-export function generateModularVueApp(decompScreens: DecomposedScreen[]): string {
-  const navLinks = decompScreens
-    .map((s) => `          <router-link to="${s.route}" class="nav-link">${s.name}</router-link>`)
-    .join('\n');
-
+export function generateModularVueApp(_decompScreens: DecomposedScreen[]): string {
   return `<script setup lang="ts">
-// Top Navigation & Router View
+// Application Root Router View
 </script>
 
 <template>
   <div class="app-root">
-    <header class="app-header">
-      <div class="brand">
-        <span class="logo-dot"></span>
-        <span class="brand-title">FlexUI App</span>
-      </div>
-      <nav class="nav-links">
-${navLinks}
-      </nav>
-    </header>
-
     <router-view />
   </div>
 </template>
@@ -227,48 +213,6 @@ ${navLinks}
   background-color: #0b0f19;
   color: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
-}
-
-.app-header {
-  background-color: #0f172a;
-  border-bottom: 1px solid #1e293b;
-  padding: 12px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.logo-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #3b82f6;
-}
-
-.nav-links {
-  display: flex;
-  gap: 16px;
-}
-
-.nav-link {
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 13px;
-  transition: color 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.router-link-active {
-  color: #38bdf8;
-  font-weight: 600;
 }
 </style>
 `;
@@ -343,32 +287,16 @@ ${routeDefs}
 `;
 }
 
-export function generateModularAngularApp(decompScreens: DecomposedScreen[]): string {
-  const navLinks = decompScreens
-    .map((s) => {
-      const cleanPath = s.route.startsWith('/') ? s.route : `/${s.route}`;
-      return `        <a routerLink="${cleanPath}" class="nav-link">${s.name}</a>`;
-    })
-    .join('\n');
-
+export function generateModularAngularApp(_decompScreens: DecomposedScreen[]): string {
   return `import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet],
   template: \`
     <div class="app-root">
-      <header class="app-header">
-        <div class="brand">
-          <span class="logo-dot"></span>
-          <span class="brand-title">FlexUI App</span>
-        </div>
-        <nav class="nav-links">
-${navLinks}
-        </nav>
-      </header>
       <router-outlet></router-outlet>
     </div>
   \`,
@@ -378,39 +306,6 @@ ${navLinks}
       background-color: #0b0f19;
       color: #f8fafc;
       font-family: system-ui, -apple-system, sans-serif;
-    }
-    .app-header {
-      background-color: #0f172a;
-      border-bottom: 1px solid #1e293b;
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .logo-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #3b82f6;
-    }
-    .nav-links {
-      display: flex;
-      gap: 16px;
-    }
-    .nav-link {
-      color: #94a3b8;
-      text-decoration: none;
-      font-size: 13px;
-    }
-    .nav-link:hover {
-      color: #38bdf8;
     }
   \`]
 })
