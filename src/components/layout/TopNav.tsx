@@ -55,8 +55,18 @@ export const TopNav: React.FC<TopNavProps> = ({
       {/* Brand & Project Name */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 font-bold text-sm tracking-tighter">
-            FU
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/10 shrink-0">
+            {/* Stylized Cat Paw Brand Logo */}
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5 fill-white text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+            >
+              <ellipse cx="6.3" cy="9.1" rx="1.5" ry="2.15" transform="rotate(-28 6.3 9.1)" />
+              <ellipse cx="10.1" cy="6.8" rx="1.65" ry="2.35" transform="rotate(-9 10.1 6.8)" />
+              <ellipse cx="13.9" cy="6.8" rx="1.65" ry="2.35" transform="rotate(9 13.9 6.8)" />
+              <ellipse cx="17.7" cy="9.1" rx="1.5" ry="2.15" transform="rotate(28 17.7 9.1)" />
+              <path d="M 12 12.2 C 11 11.2 8.7 11.2 7.5 12.8 C 6.3 14.3 6.7 16.4 8 18.2 C 9.4 19.8 14.6 19.8 16 18.2 C 17.3 16.4 17.7 14.3 16.5 12.8 C 15.3 11.2 13 11.2 12 12.2 Z" />
+            </svg>
           </div>
           <div>
             <div className="flex items-center gap-1.5">

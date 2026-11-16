@@ -1,34 +1,88 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6"/>
+    <!-- Background Gradient -->
+    <linearGradient id="paw-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="40%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+
+    <!-- Bezel Border Gradient -->
+    <linearGradient id="paw-border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
       <stop offset="50%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
     </linearGradient>
-    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0f172a"/>
+
+    <!-- Vibrant Paw Gradient -->
+    <linearGradient id="paw-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="45%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#a855f7"/>
     </linearGradient>
+
+    <!-- Soft Toe/Pad 3D Highlight -->
+    <linearGradient id="paw-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Ambient Glow Filter -->
+    <filter id="glow-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#6366f1" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#38bdf8" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- Radial Background Ambience -->
+    <radialGradient id="paw-ambient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0b0f19" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <!-- Background Rounded Rect -->
-  <rect width="512" height="512" rx="128" fill="url(#glow)"/>
-  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#334155" stroke-width="8"/>
+
+  <!-- Base macOS App Squircle -->
+  <rect width="512" height="512" rx="116" fill="url(#paw-bg)"/>
   
-  <!-- Outer Window Frame -->
-  <rect width="360" height="360" x="76" y="76" rx="48" fill="#1e293b" stroke="url(#grad)" stroke-width="16"/>
-  
-  <!-- Top App Header Bar -->
-  <path d="M 76 156 L 436 156" stroke="#334155" stroke-width="12"/>
-  <circle cx="120" cy="116" r="12" fill="#ef4444"/>
-  <circle cx="156" cy="116" r="12" fill="#f59e0b"/>
-  <circle cx="192" cy="116" r="12" fill="#10b981"/>
-  
-  <!-- Sidebar & Canvas Layout Split -->
-  <path d="M 196 156 L 196 436" stroke="#334155" stroke-width="12"/>
-  
-  <!-- UI Components inside Canvas -->
-  <rect width="180" height="40" x="226" y="196" rx="10" fill="url(#grad)"/>
-  <rect width="180" height="24" x="226" y="256" rx="6" fill="#334155"/>
-  <rect width="80" height="36" x="226" y="300" rx="8" fill="#3b82f6"/>
-  <rect width="80" height="36" x="326" y="300" rx="8" fill="#6366f1"/>
+  <!-- Subtle Outer Border -->
+  <rect x="4" y="4" width="504" height="504" rx="112" fill="none" stroke="url(#paw-border)" stroke-width="4" stroke-opacity="0.45"/>
+
+  <!-- Background Ambient Glow -->
+  <circle cx="256" cy="270" r="180" fill="url(#paw-ambient)"/>
+
+  <!-- Tech Accent Orbit Rings -->
+  <circle cx="256" cy="270" r="210" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="8 12" stroke-opacity="0.25"/>
+
+  <!-- Main Cat Paw Group with Glow -->
+  <g filter="url(#glow-shadow)">
+    <!-- Digital Pad 1 (Outer Left Toe) -->
+    <g transform="rotate(-28 135 195)">
+      <ellipse cx="135" cy="195" rx="32" ry="46" fill="url(#paw-grad)"/>
+      <ellipse cx="135" cy="183" rx="22" ry="24" fill="url(#paw-highlight)"/>
+    </g>
+
+    <!-- Digital Pad 2 (Inner Left Toe) -->
+    <g transform="rotate(-9 215 145)">
+      <ellipse cx="215" cy="145" rx="35" ry="50" fill="url(#paw-grad)"/>
+      <ellipse cx="215" cy="132" rx="24" ry="26" fill="url(#paw-highlight)"/>
+    </g>
+
+    <!-- Digital Pad 3 (Inner Right Toe) -->
+    <g transform="rotate(9 297 145)">
+      <ellipse cx="297" cy="145" rx="35" ry="50" fill="url(#paw-grad)"/>
+      <ellipse cx="297" cy="132" rx="24" ry="26" fill="url(#paw-highlight)"/>
+    </g>
+
+    <!-- Digital Pad 4 (Outer Right Toe) -->
+    <g transform="rotate(28 377 195)">
+      <ellipse cx="377" cy="195" rx="32" ry="46" fill="url(#paw-grad)"/>
+      <ellipse cx="377" cy="183" rx="22" ry="24" fill="url(#paw-highlight)"/>
+    </g>
+
+    <!-- Metacarpal Pad (Main Palm) -->
+    <path d="M 256,260 C 235,238 185,238 160,272 C 135,306 142,350 170,388 C 200,422 312,422 342,388 C 370,350 377,306 352,272 C 327,238 277,238 256,260 Z" fill="url(#paw-grad)"/>
+
+    <!-- Main Pad 3D Highlight -->
+    <ellipse cx="256" cy="285" rx="55" ry="20" fill="url(#paw-highlight)"/>
+  </g>
 </svg>

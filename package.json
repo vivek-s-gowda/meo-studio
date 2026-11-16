@@ -41,6 +41,7 @@
       "package.json"
     ],
     "mac": {
+      "icon": "electron/icons/icon.png",
       "category": "public.app-category.developer-tools",
       "darkModeSupport": true,
       "hardenedRuntime": true,
@@ -81,12 +82,14 @@
       }
     },
     "win": {
+      "icon": "electron/icons/icon.png",
       "target": [
         "nsis",
         "portable"
       ]
     },
     "linux": {
+      "icon": "electron/icons/icon.png",
       "target": [
         "AppImage",
         "deb"
