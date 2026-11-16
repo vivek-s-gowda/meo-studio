@@ -395,38 +395,41 @@ export const RightSidebar: React.FC = () => {
       <div className="flex border-b border-slate-800 bg-slate-950/60 text-xs font-medium">
         <button
           onClick={() => setActivePanel('code')}
-          className={`flex-1 py-3 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+          title="Code Inspector & Live Canvas Synchronizer"
+          className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activePanel === 'code'
               ? 'border-blue-500 text-blue-400 bg-slate-900/60'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Code2 size={14} />
-          <span>Code Inspector</span>
+          <Code2 size={15} />
+          <span>Code</span>
         </button>
 
         <button
           onClick={() => setActivePanel('tree')}
-          className={`flex-1 py-3 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+          title="DOM Hierarchy Structure Tree (Component nesting & selection)"
+          className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activePanel === 'tree'
               ? 'border-blue-500 text-blue-400 bg-slate-900/60'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <FolderTree size={14} />
-          <span>Structure Tree</span>
+          <FolderTree size={15} />
+          <span>Tree</span>
         </button>
 
         <button
           onClick={() => setActivePanel('inspector')}
-          className={`flex-1 py-3 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+          title="Quick Component Property & Style Inspector"
+          className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activePanel === 'inspector'
               ? 'border-blue-500 text-blue-400 bg-slate-900/60'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Sliders size={14} />
-          <span>Inspector</span>
+          <Sliders size={15} />
+          <span>Inspect</span>
         </button>
       </div>
 
@@ -434,8 +437,8 @@ export const RightSidebar: React.FC = () => {
       {activePanel === 'code' && (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Language Switcher Bar */}
-          <div className="p-3 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+          <div className="px-3 py-2 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <span className="text-[11px] text-slate-400 font-medium">Target:</span>
               <select
                 value={targetLanguage}
@@ -452,23 +455,25 @@ export const RightSidebar: React.FC = () => {
             <button
               onClick={handleDownloadZip}
               disabled={isExporting}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-medium transition-colors shadow-sm active:scale-95 disabled:opacity-50"
+              title={isExporting ? 'Packaging ZIP Archive...' : 'Scaffold & Download Project ZIP'}
+              className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md transition-colors shadow-sm active:scale-95 disabled:opacity-50 shrink-0"
             >
-              <Download size={13} />
-              <span>{isExporting ? 'Packaging...' : 'Scaffold ZIP'}</span>
+              <Download size={14} />
             </button>
           </div>
 
           {/* Screen & Component Scope Selector */}
           <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/90 border-b border-slate-800 text-[11px]">
-            <div className="flex items-center gap-1.5">
-              <Boxes size={12} className={isModularMode ? 'text-indigo-400' : 'text-slate-500'} />
-              <span className="text-slate-400 font-medium">File / View:</span>
+            <div
+              className="flex items-center gap-1.5 shrink-0 cursor-help"
+              title="Select File or Component View to Edit"
+            >
+              <Boxes size={13} className={isModularMode ? 'text-indigo-400' : 'text-slate-500'} />
             </div>
             <select
               value={selectedScreenView}
               onChange={(e) => setSelectedScreenView(e.target.value)}
-              className="bg-slate-900 border border-slate-700/80 rounded px-2 py-0.5 text-xs text-blue-300 font-medium outline-none cursor-pointer max-w-[210px] truncate"
+              className="bg-slate-900 border border-slate-700/80 rounded px-2 py-0.5 text-xs text-blue-300 font-medium outline-none cursor-pointer w-full ml-2 truncate"
             >
               {isModularMode ? (
                 <>

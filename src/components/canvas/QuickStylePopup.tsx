@@ -78,6 +78,7 @@ export const QuickStylePopup: React.FC = () => {
       <div className="flex border-b border-slate-800 bg-slate-950/40 text-xs font-medium">
         <button
           onClick={() => setActiveTab('styles')}
+          title="Visual Styling: Dimensions, Colors, Typography, Spacing & Flexbox"
           className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'styles'
               ? 'border-blue-500 text-blue-400 bg-slate-800/40'
@@ -89,6 +90,7 @@ export const QuickStylePopup: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('props')}
+          title="Properties & Content: Text, Labels, Placeholders & Target Routes"
           className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'props'
               ? 'border-blue-500 text-blue-400 bg-slate-800/40'
@@ -96,10 +98,11 @@ export const QuickStylePopup: React.FC = () => {
           }`}
         >
           <Sliders size={14} />
-          <span>Properties</span>
+          <span>Props</span>
         </button>
         <button
           onClick={() => setActiveTab('events')}
+          title="JavaScript Events: Bind functions and event handlers (onClick, onChange, onInput)"
           className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'events'
               ? 'border-blue-500 text-purple-400 bg-slate-800/40'
@@ -107,10 +110,11 @@ export const QuickStylePopup: React.FC = () => {
           }`}
         >
           <Code2 size={14} />
-          <span>JS Events</span>
+          <span>Events</span>
         </button>
         <button
           onClick={() => setActiveTab('data')}
+          title="Dynamic Data Binding: Connect to Mock REST APIs & Data Sources"
           className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'data'
               ? 'border-emerald-500 text-emerald-400 bg-slate-800/40'

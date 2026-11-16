@@ -187,14 +187,14 @@ export const ScreenNavBar: React.FC = () => {
             );
           })}
 
-          {/* Add Screen Button */}
+          {/* Add Screen Button (Icon with tooltip to prevent ribbon overflow) */}
           {!isPreviewMode && (
             <button
               onClick={() => setIsAddingScreen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700/80 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-all shrink-0 active:scale-95"
+              title="Add New Screen (Route & Starter Template)"
+              className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700/80 text-blue-400 hover:text-blue-300 transition-all shrink-0 active:scale-95 flex items-center justify-center"
             >
-              <Plus size={13} />
-              <span>Add Screen</span>
+              <Plus size={14} />
             </button>
           )}
         </div>

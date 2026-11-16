@@ -206,53 +206,52 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       {/* Top Editor Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 bg-slate-900/95 border-b border-slate-800 text-xs select-none">
         {/* File & Target Info */}
-        <div className="flex items-center gap-2">
-          <Code2 size={13} className="text-blue-400" />
-          <span className="font-mono font-medium text-slate-300 text-[11px] truncate max-w-[170px]">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <Code2 size={13} className="text-blue-400 shrink-0" />
+          <span
+            title={title}
+            className="font-mono font-medium text-slate-300 text-[11px] truncate max-w-[130px]"
+          >
             {title || `${language}.ts`}
           </span>
 
-          {/* Sync Status Badge */}
+          {/* Sync Status Badge (Icon with descriptive tooltip) */}
           {syncStatus === 'synced' && (
             <span
-              title="Canvas is up to date with this code"
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 font-medium"
+              title="Canvas Synced: Playground matches this code"
+              className="p-1 rounded text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 cursor-pointer shrink-0"
             >
-              <CheckCircle2 size={10} />
-              <span>Canvas Synced</span>
+              <CheckCircle2 size={11} />
             </span>
           )}
           {syncStatus === 'pending' && (
             <span
-              title="Edits will sync automatically"
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-amber-950/80 text-amber-400 border border-amber-500/30 font-medium animate-pulse"
+              title="Syncing code edits to Canvas playground..."
+              className="p-1 rounded text-amber-400 bg-amber-950/80 border border-amber-500/30 animate-pulse shrink-0"
             >
-              <Sparkles size={10} />
-              <span>Syncing...</span>
+              <Sparkles size={11} />
             </span>
           )}
           {syncStatus === 'error' && (
             <span
-              title={errorMessage || 'Syntax incomplete'}
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-rose-950/80 text-rose-400 border border-rose-500/30 font-medium cursor-help"
+              title={errorMessage || 'Syntax incomplete (Canvas preserved)'}
+              className="p-1 rounded text-rose-400 bg-rose-950/80 border border-rose-500/30 cursor-help shrink-0"
             >
-              <AlertTriangle size={10} />
-              <span className="truncate max-w-[100px]">{errorMessage || 'Syntax Error'}</span>
+              <AlertTriangle size={11} />
             </span>
           )}
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-1.5">
+        {/* Action Controls (Icons only with descriptive tooltips to prevent overflowing) */}
+        <div className="flex items-center gap-1 shrink-0">
           {/* Manual Sync Button */}
           {onApplyToCanvas && (
             <button
               onClick={handleManualSync}
-              title="Apply code edits to Canvas playground now"
-              className="flex items-center gap-1 px-2 py-0.8 rounded bg-blue-600 hover:bg-blue-500 text-white transition-colors text-[11px] font-medium shadow-sm active:scale-95"
+              title="Sync code edits to Canvas (⚡)"
+              className="p-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-sm active:scale-95 shrink-0"
             >
-              <Zap size={11} className="fill-white" />
-              <span>Sync</span>
+              <Zap size={12} className="fill-white" />
             </button>
           )}
 
@@ -260,22 +259,30 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           {onApplyToCanvas && (
             <button
               onClick={() => setAutoSync(!autoSync)}
-              title={autoSync ? 'Live Canvas Sync is ON' : 'Live Canvas Sync is PAUSED'}
-              className={`px-1.5 py-0.8 rounded text-[10px] font-mono transition-colors active:scale-95 border ${
+              title={
                 autoSync
-                  ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ? 'Live Canvas Sync: ON (click to pause)'
+                  : 'Live Canvas Sync: PAUSED (click to resume)'
+              }
+              className={`p-1.5 rounded transition-colors active:scale-95 border flex items-center justify-center shrink-0 ${
+                autoSync
+                  ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-500'
               }`}
             >
-              Live: {autoSync ? 'ON' : 'OFF'}
+              <span
+                className={`w-2 h-2 rounded-full inline-block ${
+                  autoSync ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                }`}
+              />
             </button>
           )}
 
           {/* Reset Code */}
           <button
             onClick={handleReset}
-            title="Reset code to match canvas"
-            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            title="Reset code to match canvas (revert code edits)"
+            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors shrink-0 active:scale-95"
           >
             <RotateCcw size={12} />
           </button>
@@ -284,7 +291,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <button
             onClick={() => setIsWrapText(!isWrapText)}
             title={isWrapText ? 'Disable line wrap' : 'Enable line wrap'}
-            className={`p-1 rounded transition-colors ${
+            className={`p-1.5 rounded transition-colors shrink-0 active:scale-95 ${
               isWrapText ? 'bg-blue-600/30 text-blue-300' : 'bg-slate-800 text-slate-400'
             }`}
           >
@@ -294,11 +301,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           {/* Copy Button */}
           <button
             onClick={handleCopy}
-            title="Copy code"
-            className="flex items-center gap-1 px-2 py-0.8 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-[11px] font-mono active:scale-95"
+            title={copied ? 'Copied to clipboard!' : 'Copy code to clipboard'}
+            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors font-mono active:scale-95 shrink-0"
           >
-            {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-            <span>{copied ? 'Copied' : 'Copy'}</span>
+            {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
           </button>
         </div>
       </div>

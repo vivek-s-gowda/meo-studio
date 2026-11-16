@@ -72,21 +72,20 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Templates Picker Button */}
         <button
           onClick={onOpenTemplatesModal}
-          className="ml-3 hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs text-slate-300 hover:text-white transition-colors"
+          title="Starter Templates Gallery: Forms, Dashboards, Settings"
+          className="ml-2.5 p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-blue-400 hover:text-white transition-colors flex items-center justify-center shrink-0 active:scale-95"
         >
-          <Layers size={13} className="text-blue-400" />
-          <span>Templates</span>
+          <Layers size={14} />
         </button>
 
         {/* Mock APIs & Data Sources Button */}
         <button
           onClick={() => setIsDataSourcesModalOpen(true)}
-          className="ml-2 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs text-slate-300 hover:text-white transition-colors"
-          title="Connect REST endpoints or edit local JSON data models"
+          className="ml-1.5 p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-emerald-400 hover:text-white transition-colors flex items-center gap-1 shrink-0 active:scale-95"
+          title={`Mock APIs & Data Sources (${dataSources.length} active models)`}
         >
-          <Database size={13} className="text-emerald-400" />
-          <span>Data Sources</span>
-          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded-full font-mono font-semibold">
+          <Database size={14} />
+          <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1 rounded-full font-mono font-semibold">
             {dataSources.length}
           </span>
         </button>
@@ -94,17 +93,16 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Componentize UI (Modular Architecture & Route Config) */}
         <button
           onClick={toggleModularMode}
-          className={`ml-2 hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
+          className={`ml-1.5 p-1.5 rounded-md border text-xs font-medium transition-all flex items-center gap-1 shrink-0 active:scale-95 ${
             isModularMode
               ? 'bg-indigo-600/20 border-indigo-500/60 text-indigo-300 shadow-sm shadow-indigo-500/10'
               : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-white'
           }`}
-          title="Convert canvas controls into modular components (/components/) and screens into page views with configured routes"
+          title={`Componentize UI: Modular Components & Routes (${isModularMode ? 'ACTIVE' : 'OFF'})`}
         >
-          <Boxes size={13} className={isModularMode ? 'text-indigo-400' : 'text-slate-400'} />
-          <span>Componentize</span>
+          <Boxes size={14} className={isModularMode ? 'text-indigo-400' : 'text-slate-400'} />
           <span
-            className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+            className={`text-[9px] px-1 py-0.2 rounded font-mono font-bold ${
               isModularMode ? 'bg-indigo-500/30 text-indigo-200' : 'bg-slate-800 text-slate-500'
             }`}
           >
@@ -114,11 +112,13 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {/* Center: Language Porting Dropdown & Viewport Switcher */}
-      <div className="flex items-center gap-4">
-        {/* Language Porting Dropdown (Required by User: 'at the top mid keep a dropdown to select the launguage to port the UI to react, angular or Vue') */}
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1">
+      <div className="flex items-center gap-2.5">
+        {/* Language Porting Dropdown */}
+        <div
+          title="Target Framework for Code Generation & Scaffolding"
+          className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 shrink-0"
+        >
           <Code2 size={14} className="text-blue-400 shrink-0" />
-          <span className="text-xs text-slate-400 font-medium hidden sm:inline">Port UI to:</span>
           <select
             value={targetLanguage}
             onChange={(e) => setTargetLanguage(e.target.value as TargetLanguage)}
@@ -180,36 +180,36 @@ export const TopNav: React.FC<TopNavProps> = ({
         </div>
 
         {/* Mode Toggle: Edit Mode vs Interactive Test Mode */}
-        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 shrink-0">
           <button
             onClick={() => setIsPreviewMode(false)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+            title="Edit Mode: Drag & drop controls and style components"
+            className={`p-1.5 rounded-md transition-colors ${
               !isPreviewMode ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Pencil size={12} />
-            <span className="hidden sm:inline">Edit</span>
+            <Pencil size={13} />
           </button>
           <button
             onClick={() => setIsPreviewMode(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+            title="Interactive Preview: Click to test buttons, inputs & live routing"
+            className={`p-1.5 rounded-md transition-colors ${
               isPreviewMode ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Play size={12} />
-            <span className="hidden sm:inline">Interactive</span>
+            <Play size={13} />
           </button>
         </div>
       </div>
 
       {/* Right Actions: Undo/Redo, AI Formatter, Scaffold */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Undo / Redo */}
-        <div className="hidden sm:flex items-center gap-1 border-r border-slate-800 pr-2">
+        <div className="hidden sm:flex items-center gap-0.5 border-r border-slate-800 pr-1.5">
           <button
             onClick={undo}
             disabled={!canUndo}
-            title="Undo"
+            title="Undo (Ctrl+Z)"
             className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <Undo2 size={15} />
@@ -217,7 +217,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           <button
             onClick={redo}
             disabled={!canRedo}
-            title="Redo"
+            title="Redo (Ctrl+Y)"
             className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <Redo2 size={15} />
@@ -226,7 +226,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={() => {
               if (confirm('Clear the entire playground?')) clearCanvas();
             }}
-            title="Clear Playground"
+            title="Clear Canvas Playground"
             className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
           >
             <Trash2 size={15} />
@@ -236,19 +236,20 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* AI Assistant */}
         <button
           onClick={onOpenAIModal}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/50 hover:to-blue-600/50 border border-purple-500/40 text-purple-200 text-xs font-medium transition-all shadow-sm active:scale-95"
+          title="FlexAI Assistant: Layout Formatter & Prompt Stacks"
+          className="p-1.5 rounded-lg bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/50 hover:to-blue-600/50 border border-purple-500/40 text-purple-200 transition-all shadow-sm active:scale-95 shrink-0"
         >
           <Sparkles size={14} className="text-purple-300" />
-          <span className="hidden md:inline">FlexAI Assistant</span>
         </button>
 
         {/* Scaffold Project Modal Trigger */}
         <button
           onClick={onOpenScaffoldModal}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-all shadow-md active:scale-95"
+          title="Scaffold Full Project: Export ZIP with modular components & router configuration"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-all shadow-md active:scale-95 shrink-0"
         >
           <FolderDown size={14} />
-          <span>Scaffold Project</span>
+          <span className="hidden xl:inline">Scaffold</span>
         </button>
       </div>
     </header>
