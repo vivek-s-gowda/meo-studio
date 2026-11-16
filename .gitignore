@@ -3,6 +3,7 @@ dist
 dist-old
 dist-electron
 dist-ssr
+.firebase
 *.local
 .DS_Store
 .cache
