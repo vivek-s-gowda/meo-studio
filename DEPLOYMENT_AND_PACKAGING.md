@@ -100,29 +100,44 @@ This will automatically:
 Compile the optimized frontend and package standalone installers:
 
 ```bash
-# Build desktop packages for your current operating system
+# Build desktop packages for current host OS
 npm run electron:build
 ```
 
-#### Targeted OS Builds:
+#### macOS Targeted Builds (Apple Silicon & Intel):
 ```bash
-# macOS (Generates DMG and ZIP installer in dist-electron/)
-npx electron-builder --mac
+# 🍏 Apple Silicon (M1, M2, M3, M4 - arm64) - Recommended for Apple Silicon Macs
+npm run electron:mac:arm64
+# (or simply: npm run electron:mac)
 
+# 🌐 Universal Binary (Runs natively on both Apple Silicon and Intel)
+npm run electron:mac:universal
+
+# 💻 Intel Macs (x64)
+npm run electron:mac:x64
+
+# 📦 Package both Apple Silicon (arm64) and Intel (x64) DMG installers simultaneously
+npm run electron:mac:all
+```
+
+#### Windows & Linux Builds:
+```bash
 # Windows (Generates NSIS .exe setup & portable binary)
-npx electron-builder --win
+npm run electron:win
 
 # Linux (Generates AppImage and .deb package)
-npx electron-builder --linux
+npm run electron:linux
 ```
 
 All packaged binaries, installers, and checksums will be generated in:
 ```
 dist-electron/
-├── FlexUI Studio-1.0.0.dmg      (macOS Apple Silicon / Intel)
-├── FlexUI Studio-1.0.0-mac.zip  (macOS portable archive)
-├── FlexUI Studio Setup 1.0.0.exe (Windows NSIS installer)
-└── FlexUI Studio-1.0.0.AppImage (Linux standalone binary)
+├── FlexUI Studio-1.0.0-arm64.dmg       (Apple Silicon M1/M2/M3/M4 native)
+├── FlexUI Studio-1.0.0-arm64-mac.zip   (Apple Silicon portable archive)
+├── FlexUI Studio-1.0.0-universal.dmg   (Universal Binary for all Macs)
+├── FlexUI Studio-1.0.0-x64.dmg         (Intel Mac native)
+├── FlexUI Studio Setup 1.0.0.exe       (Windows NSIS installer)
+└── FlexUI Studio-1.0.0.AppImage        (Linux standalone binary)
 ```
 
 ---

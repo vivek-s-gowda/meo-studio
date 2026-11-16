@@ -15,7 +15,11 @@
     "py-service": "python3 python_service/app.py",
     "electron:dev": "node electron/dev.cjs",
     "electron:build": "npm run build && node electron/pack.cjs",
-    "electron:mac": "npm run build && node electron/pack.cjs --mac",
+    "electron:mac": "npm run build && node electron/pack.cjs --mac --arm64",
+    "electron:mac:arm64": "npm run build && node electron/pack.cjs --mac --arm64",
+    "electron:mac:x64": "npm run build && node electron/pack.cjs --mac --x64",
+    "electron:mac:universal": "npm run build && node electron/pack.cjs --mac --universal",
+    "electron:mac:all": "npm run build && node electron/pack.cjs --mac --arm64 --x64",
     "electron:win": "npm run build && node electron/pack.cjs --win",
     "electron:linux": "npm run build && node electron/pack.cjs --linux",
     "docker:build": "docker build -t flexui .",
@@ -38,10 +42,43 @@
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "win": {
       "target": [
